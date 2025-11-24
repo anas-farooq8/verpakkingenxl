@@ -2,21 +2,6 @@
 
 > An intelligent B2B lead qualification system built with n8n that automatically captures, researches, scores, and syncs qualified business leads from Lightspeed to Pipedrive CRM.
 
-## 📋 Table of Contents
-
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [System Architecture](#system-architecture)
-- [Workflow Components](#workflow-components)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Data Structure](#data-structure)
-- [How It Works](#how-it-works)
-- [Dashboard](#dashboard)
-- [Troubleshooting](#troubleshooting)
-
 ## 🎯 Overview
 
 This automation system eliminates manual lead qualification by using AI-powered research to evaluate business customers from your Lightspeed e-commerce platform. It intelligently scores leads (0-10), enriches company data through web research, and automatically synchronizes qualified leads to your Pipedrive CRM.
