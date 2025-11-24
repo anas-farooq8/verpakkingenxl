@@ -1,0 +1,1445 @@
+<script>
+    // Data injected by n8n
+    window.kvsDataFromN8n = {{ JSON.stringify($('Aggregate KVS').item.json.data) }};
+    window.verpakkingenxlDataFromN8n = {{ JSON.stringify($('Aggregate verpakkingenxl').item.json.data) }};
+</script>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VerpakkingenXL Lead Dashboard</title>
+    <style>
+        /* ===========================
+           Base Styles & Reset
+           =========================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* ===========================
+           Layout Components
+           =========================== */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: #2c3e50;
+            font-weight: 700;
+        }
+
+        /* ===========================
+           Button Components
+           =========================== */
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+
+        .refresh-btn::before {
+            content: "⟳";
+            font-size: 18px;
+        }
+
+        .sort-btn {
+            background: #ecf0f1;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .sort-btn:hover {
+            background: #bdc3c7;
+        }
+
+        .pagination-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            min-width: 40px;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+
+        .pagination-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .save-kvs-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            min-width: 150px;
+        }
+
+        .save-kvs-btn:hover:not(:disabled) {
+            background: #229954;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+        }
+
+        .save-kvs-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+
+        .save-kvs-btn.loading::after {
+            content: "";
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ===========================
+           Tab System
+           =========================== */
+        .tabs-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            border-bottom: 2px solid #e3f2fd;
+            background: #f8f9fa;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn:hover {
+            background: #e3f2fd;
+            color: #2c3e50;
+        }
+
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ===========================
+           KVS Configuration Section
+           =========================== */
+        .kvs-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .kvs-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .kvs-item label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 15px;
+        }
+
+        .kvs-item input,
+        .kvs-item textarea {
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            transition: border-color 0.3s;
+            background: #f8f9fa;
+        }
+
+        .kvs-item textarea {
+            resize: vertical;
+            min-height: 250px;
+            line-height: 1.6;
+        }
+
+        .kvs-item input:focus,
+        .kvs-item textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            background: white;
+        }
+
+        .kvs-item.limit-item input {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* ===========================
+           Filters Section
+           =========================== */
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .filters-section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-item label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .filter-item input,
+        .filter-item select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-item select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9L1 4h10z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 35px;
+        }
+
+        .range-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .range-value {
+            font-weight: 600;
+            color: #3498db;
+            min-width: 40px;
+        }
+
+        /* ===========================
+           Data Table Section
+           =========================== */
+        .data-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .data-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .data-header h2 {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        .sort-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sort-controls label {
+            font-weight: 600;
+            color: #555;
+        }
+
+        .sort-controls select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9L1 4h10z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 35px;
+        }
+
+        .results-count {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tbody tr {
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        /* ===========================
+           Status & Badge Components
+           =========================== */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-queued {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-processed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .lead-score {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .deal-link {
+            color: #3498db;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+
+        .deal-link:hover {
+            color: #2980b9;
+        }
+
+        /* ===========================
+           Pagination
+           =========================== */
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+            padding: 20px;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 0 15px;
+        }
+
+        /* ===========================
+           Modal Components
+           =========================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 25px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 1;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-section {
+            margin-bottom: 25px;
+        }
+
+        .modal-section h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-field.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .modal-field label {
+            font-weight: 600;
+            color: #555;
+            font-size: 13px;
+            margin-bottom: 5px;
+        }
+
+        .modal-field .value {
+            color: #333;
+            font-size: 14px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .modal-field .value.long-text {
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚚 VerpakkingenXL Lead Dashboard</h1>
+            <button class="refresh-btn" onclick="app.refreshData()">Refresh</button>
+        </div>
+
+        <!-- Tabs Container -->
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-btn active" onclick="app.switchTab('dashboard')">📊 Dashboard</button>
+                <button class="tab-btn" onclick="app.switchTab('kvs')">⚙️ KVS Configuration</button>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="tab-dashboard" class="tab-content active">
+                <!-- Filters Section -->
+                <div class="filters-section">
+                    <h2>Filters</h2>
+                    <div class="filters-grid">
+                        <div class="filter-item">
+                            <label for="search">Search</label>
+                            <input type="text" id="search" placeholder="Org name, Customer name, Email...">
+                        </div>
+                        <div class="filter-item">
+                            <label for="status">Status</label>
+                            <select id="status">
+                                <option value="all">All</option>
+                                <option value="queued">Queued</option>
+                                <option value="processed">Processed</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="zipcode">Zipcode</label>
+                            <select id="zipcode">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="city">City</label>
+                            <select id="city">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="country">Country</label>
+                            <select id="country">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="shipping_volume">Estimated Shipping Volume</label>
+                            <select id="shipping_volume">
+                                <option value="all">All</option>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label for="logistics_type">Logistics Type</label>
+                            <select id="logistics_type">
+                                <option value="all">All</option>
+                                <option value="parcels">Parcels</option>
+                                <option value="pallets">Pallets</option>
+                                <option value="both">Both</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>Lead Score Range: <span class="range-value" id="score_display">0.0 - 10.0</span></label>
+                            <div class="range-slider">
+                                <input type="number" id="score_min" min="0" max="10" step="0.1" value="0" style="width: 80px;">
+                                <span>to</span>
+                                <input type="number" id="score_max" min="0" max="10" step="0.1" value="10" style="width: 80px;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Section -->
+                <div class="data-section">
+                    <div class="data-header">
+                        <h2>Leads Data</h2>
+                        <div class="sort-controls">
+                            <label>Sort by:</label>
+                            <select id="sort_field">
+                                <option value="createdAt">Created Date</option>
+                                <option value="lead_score">Lead Score</option>
+                                <option value="total_orders">Total Orders</option>
+                                <option value="paid_orders">Paid Orders</option>
+                                <option value="total_value_incl">Total Value (incl)</option>
+                            </select>
+                            <button class="sort-btn" onclick="app.toggleSort()">
+                                <span id="sort_direction">↓</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="results-count" id="results_count">Results</div>
+                    <div class="table-container">
+                        <table id="data_table">
+                            <thead>
+                                <tr>
+                                    <th>Organization</th>
+                                    <th>Customer Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>Shipping Vol.</th>
+                                    <th>Logistics</th>
+                                    <th>Total Orders</th>
+                                    <th>Paid Orders</th>
+                                    <th>Total Value</th>
+                                    <th>Lead Score</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table_body">
+                                <tr><td colspan="13" class="no-results">No Results</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="pagination-container" id="pagination_container" style="display: none;">
+                        <button class="pagination-btn" onclick="app.goToPage('first')" id="btn_first">««</button>
+                        <button class="pagination-btn" onclick="app.goToPage('prev')" id="btn_prev">«</button>
+                        <span class="pagination-info" id="pagination_info">Page 1 of 1</span>
+                        <button class="pagination-btn" onclick="app.goToPage('next')" id="btn_next">»</button>
+                        <button class="pagination-btn" onclick="app.goToPage('last')" id="btn_last">»»</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KVS Configuration Tab -->
+            <div id="tab-kvs" class="tab-content">
+                <h2 style="margin-bottom: 25px; color: #2c3e50; font-size: 24px;">⚙️ KVS Configuration</h2>
+                
+                <div class="kvs-grid">
+                    <div class="kvs-item">
+                        <label for="system_prompt_base_agent">📝 System Prompt - Base Agent</label>
+                        <textarea id="system_prompt_base_agent" placeholder="Enter the system prompt for the base agent..."></textarea>
+                    </div>
+                    
+                    <div class="kvs-item">
+                        <label for="system_prompt_web_search_agent">🔍 System Prompt - Web Search Agent</label>
+                        <textarea id="system_prompt_web_search_agent" placeholder="Enter the system prompt for the web search agent..."></textarea>
+                    </div>
+                    
+                    <div class="kvs-item limit-item">
+                        <label for="total_limit">🎯 Total Limit</label>
+                        <input type="number" id="total_limit" placeholder="Enter total limit...">
+                    </div>
+                </div>
+                
+                <button class="save-kvs-btn" onclick="app.saveKVS()" id="save-kvs-btn">
+                    <span id="save-btn-text">💾 Save Configuration</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal_overlay" onclick="app.closeModalOnOverlay(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modal_title">Lead Details</h2>
+                <button class="modal-close" onclick="app.closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal_body">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // VerpakkingenXL Dashboard Application
+        // ============================================
+        const app = (() => {
+            // ========================================
+            // State Management
+            // ========================================
+            const state = {
+                allData: [],
+                kvsData: [],
+                filteredData: [],
+                sortDirection: 'desc',
+                currentPage: 1,
+                rowsPerPage: 20,
+                kvsFieldsEdited: false,
+                originalKvsValues: {}
+            };
+
+            // ========================================
+            // Constants
+            // ========================================
+            const ELEMENTS = {
+                tableBody: document.getElementById('table_body'),
+                resultsCount: document.getElementById('results_count'),
+                paginationContainer: document.getElementById('pagination_container'),
+                paginationInfo: document.getElementById('pagination_info'),
+                sortDirection: document.getElementById('sort_direction'),
+                modalOverlay: document.getElementById('modal_overlay'),
+                modalTitle: document.getElementById('modal_title'),
+                modalBody: document.getElementById('modal_body'),
+                saveBtnText: document.getElementById('save-btn-text'),
+                saveBtn: document.getElementById('save-kvs-btn'),
+                scoreDisplay: document.getElementById('score_display')
+            };
+
+            const KVS_WEBHOOK_URL = 'https://n8n.srv1148868.hstgr.cloud/webhook/update-kvs';
+
+            // ========================================
+            // Data Initialization
+            // ========================================
+            function initializeData() {
+                try {
+                    // Check if the data exists and is valid
+                    if (typeof window.kvsDataFromN8n === 'undefined' || typeof window.verpakkingenxlDataFromN8n === 'undefined') {
+                        console.warn('Data sources not found - using empty arrays');
+                        state.kvsData = [];
+                        state.allData = [];
+                    } else {
+                        state.kvsData = Array.isArray(window.kvsDataFromN8n) ? window.kvsDataFromN8n : [];
+                        state.allData = Array.isArray(window.verpakkingenxlDataFromN8n) ? window.verpakkingenxlDataFromN8n : [];
+                    }
+
+                    populateKVS();
+                    
+                    // Only populate filters and render table if we have data
+                    if (state.allData.length > 0) {
+                        populateUniqueFilters();
+                        applyFiltersAndSort();
+                    } else {
+                        displayNoData();
+                    }
+                } catch (error) {
+                    console.error('Data initialization error:', error);
+                    console.error('Error details:', error.message, error.stack);
+                    displayNoData();
+                }
+            }
+
+            function displayError(message) {
+                ELEMENTS.tableBody.innerHTML = `<tr><td colspan="13" class="no-results" style="color: #e74c3c;">${message}</td></tr>`;
+                ELEMENTS.resultsCount.textContent = message;
+            }
+
+            // ========================================
+            // KVS Configuration Management
+            // ========================================
+            function populateKVS() {
+                const fields = ['system_prompt_base_agent', 'system_prompt_web_search_agent', 'total_limit'];
+                const placeholders = {
+                    'system_prompt_base_agent': 'No Available Data',
+                    'system_prompt_web_search_agent': 'No Available Data',
+                    'total_limit': 'No Data'
+                };
+
+                if (state.kvsData.length === 0) {
+                    fields.forEach(fieldId => {
+                        const element = document.getElementById(fieldId);
+                        element.value = '';
+                        element.placeholder = placeholders[fieldId];
+                    });
+                } else {
+                    state.kvsData.forEach(item => {
+                        const element = document.getElementById(item.key);
+                        if (element) {
+                            element.value = item.value;
+                            element.placeholder = '';
+                            state.originalKvsValues[item.key] = item.value;
+                        }
+                    });
+                }
+
+                attachKVSEventListeners();
+                updateSaveButtonState();
+            }
+
+            function attachKVSEventListeners() {
+                ['system_prompt_base_agent', 'system_prompt_web_search_agent', 'total_limit']
+                    .forEach(id => {
+                        document.getElementById(id).addEventListener('input', onKvsFieldChange);
+                    });
+            }
+
+            function onKvsFieldChange() {
+                state.kvsFieldsEdited = true;
+                updateSaveButtonState();
+            }
+
+            function updateSaveButtonState() {
+                ELEMENTS.saveBtn.disabled = !state.kvsFieldsEdited;
+            }
+
+            async function saveKVS() {
+                const payload = buildKVSPayload();
+                
+                if (payload.length === 0) {
+                    alert('⚠️ No fields have been edited. Please make changes before saving.');
+                    return;
+                }
+
+                setSaveButtonState('loading');
+
+                try {
+                    const response = await fetch(KVS_WEBHOOK_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.status === 200) {
+                        handleSaveSuccess();
+                    } else {
+                        throw new Error('Failed to save');
+                    }
+                } catch (error) {
+                    handleSaveError();
+                    console.error('Save error:', error);
+                }
+            }
+
+            function buildKVSPayload() {
+                const payload = [];
+                const fields = [
+                    { id: 'system_prompt_base_agent', key: 'system_prompt_base_agent' },
+                    { id: 'system_prompt_web_search_agent', key: 'system_prompt_web_search_agent' },
+                    { id: 'total_limit', key: 'total_limit' }
+                ];
+
+                fields.forEach(field => {
+                    const value = document.getElementById(field.id).value;
+                    if (value) {
+                        payload.push({ key: field.key, value });
+                    }
+                });
+
+                return payload;
+            }
+
+            function setSaveButtonState(status) {
+                ELEMENTS.saveBtn.disabled = true;
+                ELEMENTS.saveBtn.classList.remove('loading', 'success');
+                
+                switch(status) {
+                    case 'loading':
+                        ELEMENTS.saveBtn.classList.add('loading');
+                        ELEMENTS.saveBtnText.textContent = 'Saving...';
+                        break;
+                    case 'success':
+                        ELEMENTS.saveBtn.classList.add('success');
+                        ELEMENTS.saveBtnText.textContent = '✅ Saved Successfully!';
+                        break;
+                    case 'error':
+                        ELEMENTS.saveBtnText.textContent = '❌ Save Failed';
+                        break;
+                }
+            }
+
+            function handleSaveSuccess() {
+                setSaveButtonState('success');
+                state.kvsFieldsEdited = false;
+
+                setTimeout(() => {
+                    ELEMENTS.saveBtnText.textContent = '💾 Save Configuration';
+                    updateSaveButtonState();
+                }, 2000);
+            }
+
+            function handleSaveError() {
+                setSaveButtonState('error');
+                alert('❌ Failed to save KVS configuration. Please try again.');
+
+                setTimeout(() => {
+                    ELEMENTS.saveBtn.disabled = false;
+                    ELEMENTS.saveBtnText.textContent = '💾 Save Configuration';
+                }, 2000);
+            }
+
+            // ========================================
+            // Filter Management
+            // ========================================
+            function populateUniqueFilters() {
+                const extractUniqueValues = (field) => 
+                    [...new Set(state.allData.map(item => item[field]).filter(Boolean))].sort();
+
+                const populateDropdown = (selectId, values) => {
+                    const select = document.getElementById(selectId);
+                    values.forEach(value => {
+                        const option = document.createElement('option');
+                        option.value = value;
+                        option.textContent = value;
+                        select.appendChild(option);
+                    });
+                };
+
+                populateDropdown('zipcode', extractUniqueValues('address_billing_zipcode'));
+                populateDropdown('city', extractUniqueValues('address_billing_city'));
+                populateDropdown('country', extractUniqueValues('address_billing_country'));
+            }
+
+            function getFilterValues() {
+                return {
+                    search: document.getElementById('search').value.toLowerCase(),
+                    status: document.getElementById('status').value,
+                    zipcode: document.getElementById('zipcode').value,
+                    city: document.getElementById('city').value,
+                    country: document.getElementById('country').value,
+                    shippingVolume: document.getElementById('shipping_volume').value,
+                    logisticsType: document.getElementById('logistics_type').value,
+                    scoreMin: parseFloat(document.getElementById('score_min').value),
+                    scoreMax: parseFloat(document.getElementById('score_max').value)
+                };
+            }
+
+            function filterItem(item, filters) {
+                // Search filter
+                if (filters.search) {
+                    const searchFields = [item.org_name, item.customer_name, item.email]
+                        .map(f => (f || '').toLowerCase());
+                    if (!searchFields.some(field => field.includes(filters.search))) return false;
+                }
+
+                // Dropdown filters
+                if (filters.status !== 'all' && item.status !== filters.status) return false;
+                if (filters.zipcode !== 'all' && item.address_billing_zipcode !== filters.zipcode) return false;
+                if (filters.city !== 'all' && item.address_billing_city !== filters.city) return false;
+                if (filters.country !== 'all' && item.address_billing_country !== filters.country) return false;
+                if (filters.shippingVolume !== 'all' && item.estimated_shipping_volume !== filters.shippingVolume) return false;
+                if (filters.logisticsType !== 'all' && item.likely_logistics_type !== filters.logisticsType) return false;
+
+                // Score range filter
+                if (item.lead_score < filters.scoreMin || item.lead_score > filters.scoreMax) return false;
+
+                return true;
+            }
+
+            // ========================================
+            // Sorting & Filtering
+            // ========================================
+            function applyFiltersAndSort() {
+                const filters = getFilterValues();
+                state.filteredData = state.allData.filter(item => filterItem(item, filters));
+                
+                sortData();
+                state.currentPage = 1;
+                renderTable();
+                updatePagination();
+            }
+
+            function sortData() {
+                const sortField = document.getElementById('sort_field').value;
+                
+                state.filteredData.sort((a, b) => {
+                    let aVal = a[sortField];
+                    let bVal = b[sortField];
+
+                    if (sortField === 'createdAt') {
+                        aVal = new Date(aVal);
+                        bVal = new Date(bVal);
+                    }
+
+                    const comparison = aVal > bVal ? 1 : -1;
+                    return state.sortDirection === 'asc' ? comparison : -comparison;
+                });
+            }
+
+            function toggleSort() {
+                state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+                ELEMENTS.sortDirection.textContent = state.sortDirection === 'asc' ? '↑' : '↓';
+                applyFiltersAndSort();
+            }
+
+            // ========================================
+            // Table Rendering
+            // ========================================
+            function renderTable() {
+                if (state.allData.length === 0) {
+                    displayNoData();
+                    return;
+                }
+
+                if (state.filteredData.length === 0) {
+                    displayNoResults();
+                    return;
+                }
+
+                const pageData = getPaginatedData();
+                updateResultsCount(pageData);
+                renderTableRows(pageData);
+                togglePaginationVisibility();
+            }
+
+            function displayNoData() {
+                ELEMENTS.resultsCount.textContent = 'No Available Data';
+                ELEMENTS.tableBody.innerHTML = '<tr><td colspan="13" class="no-results">No Available Data</td></tr>';
+            }
+
+            function displayNoResults() {
+                ELEMENTS.resultsCount.textContent = `Showing 0 of ${state.allData.length} leads`;
+                ELEMENTS.tableBody.innerHTML = '<tr><td colspan="13" class="no-results">No results found</td></tr>';
+                ELEMENTS.paginationContainer.style.display = 'none';
+            }
+
+            function getPaginatedData() {
+                const startIdx = (state.currentPage - 1) * state.rowsPerPage;
+                const endIdx = Math.min(startIdx + state.rowsPerPage, state.filteredData.length);
+                return {
+                    items: state.filteredData.slice(startIdx, endIdx),
+                    startIdx,
+                    endIdx
+                };
+            }
+
+            function updateResultsCount(pageData) {
+                ELEMENTS.resultsCount.textContent = 
+                    `Showing ${pageData.startIdx + 1}-${pageData.endIdx} of ${state.filteredData.length} leads (${state.allData.length} total)`;
+            }
+
+            function togglePaginationVisibility() {
+                ELEMENTS.paginationContainer.style.display = 
+                    state.filteredData.length > state.rowsPerPage ? 'flex' : 'none';
+            }
+
+            function renderTableRows(pageData) {
+                ELEMENTS.tableBody.innerHTML = pageData.items.map(item => createTableRow(item)).join('');
+            }
+
+            function createTableRow(item) {
+                const isProcessed = item.status === 'processed';
+                
+                const orgLink = (isProcessed && item.org_id)
+                    ? `<a href="https://verpakkingenxl.pipedrive.com/organization/${item.org_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/organization/${item.org_id}', event); return false;">${item.org_name || 'N/A'}</a>`
+                    : (item.org_name || 'N/A');
+                
+                const personLink = (isProcessed && item.person_id)
+                    ? `<a href="https://verpakkingenxl.pipedrive.com/person/${item.person_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/person/${item.person_id}', event); return false;">${item.customer_name || 'N/A'}</a>`
+                    : (item.customer_name || 'N/A');
+                
+                return `
+                    <tr onclick="app.openModal(${item.id})">
+                        <td>${orgLink}</td>
+                        <td>${personLink}</td>
+                        <td>${item.email || 'N/A'}</td>
+                        <td>${item.phone || 'N/A'}</td>
+                        <td>${formatAddress(item)}</td>
+                        <td>${item.estimated_shipping_volume || 'N/A'}</td>
+                        <td>${item.likely_logistics_type || 'N/A'}</td>
+                        <td>${item.total_orders || 0}</td>
+                        <td>${item.paid_orders || 0}</td>
+                        <td>€${(item.total_value_incl || 0).toFixed(2)}</td>
+                        <td><span class="lead-score">${item.lead_score.toFixed(1)}</span></td>
+                        <td>${createStatusCell(item)}</td>
+                        <td>${new Date(item.createdAt).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            }
+
+            function formatAddress(item) {
+                return `${item.address_billing_street} ${item.address_billing_number}<br>` +
+                       `${item.address_billing_zipcode} ${item.address_billing_city}<br>` +
+                       `${item.address_billing_country}`;
+            }
+
+            function createStatusCell(item) {
+                if (item.status === 'processed' && item.deal_id) {
+                    return `<a href="https://verpakkingenxl.pipedrive.com/deal/${item.deal_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/deal/${item.deal_id}', event); return false;">Processed</a>`;
+                }
+                const statusText = item.status.charAt(0).toUpperCase() + item.status.slice(1);
+                return `<span class="status-badge status-${item.status}">${statusText}</span>`;
+            }
+
+            // ========================================
+            // Pagination
+            // ========================================
+            function updatePagination() {
+                const totalPages = Math.ceil(state.filteredData.length / state.rowsPerPage);
+                ELEMENTS.paginationInfo.textContent = `Page ${state.currentPage} of ${totalPages}`;
+
+                const buttons = {
+                    first: document.getElementById('btn_first'),
+                    prev: document.getElementById('btn_prev'),
+                    next: document.getElementById('btn_next'),
+                    last: document.getElementById('btn_last')
+                };
+
+                buttons.first.disabled = state.currentPage === 1;
+                buttons.prev.disabled = state.currentPage === 1;
+                buttons.next.disabled = state.currentPage === totalPages;
+                buttons.last.disabled = state.currentPage === totalPages;
+            }
+
+            function goToPage(action) {
+                const totalPages = Math.ceil(state.filteredData.length / state.rowsPerPage);
+
+                switch(action) {
+                    case 'first': state.currentPage = 1; break;
+                    case 'prev': if (state.currentPage > 1) state.currentPage--; break;
+                    case 'next': if (state.currentPage < totalPages) state.currentPage++; break;
+                    case 'last': state.currentPage = totalPages; break;
+                }
+
+                renderTable();
+                updatePagination();
+            }
+
+            // ========================================
+            // Modal Management
+            // ========================================
+            function openModal(id) {
+                const item = state.allData.find(d => d.id === id);
+                if (!item) return;
+
+                ELEMENTS.modalTitle.textContent = item.org_name || 'Lead Details';
+                ELEMENTS.modalBody.innerHTML = createModalContent(item);
+                ELEMENTS.modalOverlay.classList.add('active');
+            }
+
+            function createModalContent(item) {
+                return `
+                    ${createModalSection('Status & Deal Information', createStatusSection(item))}
+                    ${createModalSection('Organization Details', createOrgDetailsSection(item))}
+                    ${createModalSection('Customer Info / Contact Details', createContactSection(item))}
+                    ${createModalSection('Billing Address', createAddressSection(item))}
+                    ${createModalSection('Order Detail History from Our Shop', createOrderHistorySection(item))}
+                    ${createModalSection('AI Analysis', createAIOutputSection(item))}
+                    ${createModalSection('Created At', `<div class="modal-field"><label>Date</label><div class="value">${new Date(item.createdAt).toLocaleDateString()}</div></div>`)}
+                `;
+            }
+
+            function createModalSection(title, content) {
+                return `
+                    <div class="modal-section">
+                        <h3>${title}</h3>
+                        <div class="modal-grid">${content}</div>
+                    </div>
+                `;
+            }
+
+            function createModalField(label, value, isFullWidth = false) {
+                return `
+                    <div class="modal-field ${isFullWidth ? 'full-width' : ''}">
+                        <label>${label}</label>
+                        <div class="value ${isFullWidth ? 'long-text' : ''}">${value}</div>
+                    </div>
+                `;
+            }
+
+            function createStatusSection(item) {
+                const statusBadge = `<span class="status-badge status-${item.status}">${item.status.charAt(0).toUpperCase() + item.status.slice(1)}</span>`;
+                const isProcessed = item.status === 'processed';
+                
+                let links = '';
+                
+                if (isProcessed && item.org_id) {
+                    links += `<div class="modal-field"><label>Organization Link</label><div class="value"><a href="https://verpakkingenxl.pipedrive.com/organization/${item.org_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/organization/${item.org_id}', event); return false;">View Organization ↗</a></div></div>`;
+                }
+                
+                if (isProcessed && item.person_id) {
+                    links += `<div class="modal-field"><label>Person Link</label><div class="value"><a href="https://verpakkingenxl.pipedrive.com/person/${item.person_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/person/${item.person_id}', event); return false;">View Person ↗</a></div></div>`;
+                }
+                
+                if (isProcessed && item.deal_id) {
+                    links += `<div class="modal-field"><label>Deal Link</label><div class="value"><a href="https://verpakkingenxl.pipedrive.com/deal/${item.deal_id}" class="deal-link" onclick="app.openDealLink('https://verpakkingenxl.pipedrive.com/deal/${item.deal_id}', event); return false;">View Deal ↗</a></div></div>`;
+                }
+                
+                return `${createModalField('Status', statusBadge)}${links}`;
+            }
+
+            function createOrgDetailsSection(item) {
+                return [
+                    createModalField('Lightspeed Customer ID', item.lightspeed_id || 'N/A'),
+                    createModalField('Organization Name', item.org_name || 'N/A'),
+                    createModalField('COC', item.coc || 'N/A'),
+                    createModalField('VAT', item.vat || 'N/A')
+                ].join('');
+            }
+
+            function createContactSection(item) {
+                return [
+                    createModalField('Name', item.customer_name || 'N/A'),
+                    createModalField('Email', item.email || 'N/A'),
+                    createModalField('Phone', item.phone || 'N/A'),
+                    createModalField('Mobile', item.mobile || 'N/A')
+                ].join('');
+            }
+
+            function createAddressSection(item) {
+                return [
+                    createModalField('Street & Number', `${item.address_billing_street} ${item.address_billing_number}`),
+                    createModalField('Zipcode', item.address_billing_zipcode || 'N/A'),
+                    createModalField('City', item.address_billing_city || 'N/A'),
+                    createModalField('Country', item.address_billing_country || 'N/A')
+                ].join('');
+            }
+
+            function createOrderHistorySection(item) {
+                return [
+                    createModalField('Total Orders', item.total_orders || 0),
+                    createModalField('Paid Orders', item.paid_orders || 0),
+                    createModalField('Total Value (incl)', `€${(item.total_value_incl || 0).toFixed(2)}`)
+                ].join('');
+            }
+
+            function createAIOutputSection(item) {
+                return [
+                    createModalField('Decision', item.decision || 'N/A'),
+                    createModalField('Estimated Logistics', item.likely_logistics_type || 'N/A'),
+                    createModalField('Likely Shipping Volume', item.estimated_shipping_volume || 'N/A'),
+                    createModalField('Lead Score', `<span class="lead-score">${item.lead_score.toFixed(1)}</span>`),
+                    createModalField('Reason', item.reason || 'N/A', true),
+                    createModalField('Compact Instruction', item.compact_instruction || 'N/A', true)
+                ].join('');
+            }
+
+            function closeModal() {
+                ELEMENTS.modalOverlay.classList.remove('active');
+            }
+
+            function closeModalOnOverlay(event) {
+                if (event.target.id === 'modal_overlay') {
+                    closeModal();
+                }
+            }
+
+            // ========================================
+            // External Link Handling
+            // ========================================
+            function openDealLink(url, event) {
+                event.stopPropagation();
+                
+                // Simulate Ctrl+Click to bypass security restrictions
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                
+                const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                    ctrlKey: true,
+                    metaKey: true // For Mac
+                });
+                link.dispatchEvent(clickEvent);
+                
+                document.body.removeChild(link);
+            }
+
+            // ========================================
+            // Tab Management
+            // ========================================
+            function switchTab(tabName) {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                document.getElementById('tab-' + tabName).classList.add('active');
+            }
+
+            // ========================================
+            // Utility Functions
+            // ========================================
+            function updateScoreDisplay() {
+                const min = document.getElementById('score_min').value;
+                const max = document.getElementById('score_max').value;
+                ELEMENTS.scoreDisplay.textContent = `${min} - ${max}`;
+            }
+
+            function refreshData() {
+                location.reload();
+            }
+
+            // ========================================
+            // Event Listener Setup
+            // ========================================
+            function setupEventListeners() {
+                const filterElements = [
+                    { id: 'search', event: 'input' },
+                    { id: 'status', event: 'change' },
+                    { id: 'zipcode', event: 'change' },
+                    { id: 'city', event: 'change' },
+                    { id: 'country', event: 'change' },
+                    { id: 'shipping_volume', event: 'change' },
+                    { id: 'logistics_type', event: 'change' },
+                    { id: 'sort_field', event: 'change' }
+                ];
+
+                filterElements.forEach(({ id, event }) => {
+                    document.getElementById(id).addEventListener(event, applyFiltersAndSort);
+                });
+
+                document.getElementById('score_min').addEventListener('input', () => {
+                    updateScoreDisplay();
+                    applyFiltersAndSort();
+                });
+
+                document.getElementById('score_max').addEventListener('input', () => {
+                    updateScoreDisplay();
+                    applyFiltersAndSort();
+                });
+            }
+
+            // ========================================
+            // Public API
+            // ========================================
+            return {
+                // Data operations
+                refreshData,
+                
+                // Table operations
+                toggleSort,
+                goToPage,
+                
+                // Modal operations
+                openModal,
+                closeModal,
+                closeModalOnOverlay,
+                openDealLink,
+                
+                // Tab operations
+                switchTab,
+                
+                // KVS operations
+                saveKVS,
+                
+                // Initialize
+                init: () => {
+                    setupEventListeners();
+                    initializeData();
+                }
+            };
+        })();
+
+        // Initialize application
+        app.init();
+    </script>
+</body>
+</html>
