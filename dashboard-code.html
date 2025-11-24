@@ -1229,7 +1229,7 @@
                     ${createModalSection('Billing Address', createAddressSection(item))}
                     ${createModalSection('Order Detail History from Our Shop', createOrderHistorySection(item))}
                     ${createModalSection('AI Analysis', createAIOutputSection(item))}
-                    ${createModalSection('Created At', `<div class="modal-field"><label>Date</label><div class="value">${new Date(item.createdAt).toLocaleDateString()}</div></div>`)}
+                    ${createModalSection('Created At', `<div class="modal-field"><label>Timestamp</label><div class="value">${new Date(item.createdAt).toLocaleString('nl-NL', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })}</div></div>`)}
                 `;
             }
 
