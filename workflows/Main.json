@@ -1,0 +1,2591 @@
+{
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        48
+      ],
+      "id": "2da8663b-099d-4570-a9ad-e771a4d41a37",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "orders",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        464
+      ],
+      "id": "8184f6be-78b9-474f-a126-69142a0d8aa1",
+      "name": "Webhook",
+      "webhookId": "75d73873-0ad3-4be7-b590-72387e17fa95"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.webshopapp.com/nl/webhooks.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "webhook[isActive]",
+              "value": "true"
+            },
+            {
+              "name": "webhook[itemGroup]",
+              "value": "orders"
+            },
+            {
+              "name": "webhook[itemAction]",
+              "value": "created"
+            },
+            {
+              "name": "webhook[language]",
+              "value": "en"
+            },
+            {
+              "name": "webhook[format]",
+              "value": "json"
+            },
+            {
+              "name": "webhook[address]",
+              "value": "https://n8n.srv1148868.hstgr.cloud/webhook/orders"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        48
+      ],
+      "id": "7848a066-667e-4f4a-b824-9b59f5a52274",
+      "name": "Create Webhook (Basic Auth)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "W4OhOcXMeLkrZvDy",
+          "name": "Lighspeed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.webshopapp.com/nl/webhooks.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        48
+      ],
+      "id": "f1f869e6-32c1-4f23-9d26-be4f21509011",
+      "name": "Get All Webhooks",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "W4OhOcXMeLkrZvDy",
+          "name": "Lighspeed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Create and Verify Webhook",
+        "height": 80,
+        "width": 352,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        384,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "da3ae785-1884-4179-b445-9bdb170b7899",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Below is the company information extracted from a Lightspeed order. Analyze ONLY this company data.\n\nHere is the company object:\n{\n  \"companyName\": \"{{ $('Webhook').item.json.body.order.companyName }}\",\n  \"domain\": \"{{ ($('Webhook').item.json.body.order.email || '').toString().split('@').pop() }}\",\n  \"email\": \"{{ $('Webhook').item.json.body.order.email }}\",\n  \"firstname\": \"{{ $('Webhook').item.json.body.order.firstname }}\",\n  \"lastname\": \"{{ $('Webhook').item.json.body.order.lastname }}\",\n  \"billingAddress\": {\n    \"name\": \"{{ $('Webhook').item.json.body.order.addressBillingName }}\",\n    \"street\": \"{{ $('Webhook').item.json.body.order.addressBillingStreet }}\",\n    \"zipcode\": \"{{ $('Webhook').item.json.body.order.addressBillingZipcode }}\",\n    \"city\": \"{{ $('Webhook').item.json.body.order.addressBillingCity }}\",\n    \"countryTitle\": \"{{ $('Webhook').item.json.body.order.addressBillingCountry.title }}\"\n  },\n  \"companyVatNumber\": \"{{ $('Webhook').item.json.body.order.companyVatNumber }}\",\n  \"companyCoCNumber\": \"{{ $('Webhook').item.json.body.order.companyCoCNumber }}\"\n}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "={{ $json[\"data\"].find(item => item.key === 'system_prompt_base_agent')?.value || \"You are a Helpful Assistant\" }}",
+          "maxIterations": 10
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1584,
+        432
+      ],
+      "id": "4ee9314a-1b30-4166-9905-97669f9825e0",
+      "name": "AI Agent",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        224
+      ],
+      "id": "cfbdb837-0197-461c-b394-b7190ee4c862",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GHbO6FSOvOQAqB2x",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"decision\": \"YES or NO\",\n  \"reason\": \"short one-sentence justification\",\n  \"estimated_shipping_volume\": \"low | medium | high\",\n  \"likely_logistics_type\": \"parcels | pallets | both | unknown\",\n  \"score\": 0.0,\n  \"compact_instruction\": \"company summary\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1824,
+        224
+      ],
+      "id": "243503d1-a3f0-43bb-93fb-12852ba6d1fd",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to perform real-time Google Search on the internet. The tool returns live web results, which you must analyze.",
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"system_instruction\": {\n    \"parts\": [\n      {\n        \"text\": \"{{ $json[\"data\"].find(item => item.key === 'system_prompt_web_search_agent')?.value.replace(/\\n/g, '\\\\n') || \"You are a Internet Explorer\" }}\"\n      }\n    ]\n  },\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": {{ JSON.stringify($fromAI(\"input\", \"\", \"string\")) }}\n        }\n      ]\n    }\n  ],\n  \"tools\": [\n    {\n      \"google_search\": {}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1664,
+        224
+      ],
+      "id": "0cc312d2-07cb-486a-842e-23af9d0f4a94",
+      "name": "Gemini Search",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "xPIwKYA6VC6SnKVT",
+          "name": "Gemini-Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e1a194de-8f24-4f8f-9dcf-c6faa759a698",
+              "leftValue": "={{ $json.body.order.isCompany }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        464
+      ],
+      "id": "ff031669-55b4-4e8e-8dc2-8f7c73d62f39",
+      "name": "If Company"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d1ee5eb-c704-48ed-99f5-b977449dc9ee",
+              "leftValue": "={{ $json.output.decision.toLowerCase() }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "ab900d61-eacc-4494-9ab8-327ac1213599",
+              "leftValue": "={{ $json.output.score }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        432
+      ],
+      "id": "541ddafb-3302-4543-aca3-7a49abab7730",
+      "name": "If a Good Lead"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v2/organizations",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.org_name}}\",\n  \"label_ids\": [10],\n  \"visible_to\": 3,\n  \"address\": {\n    \"value\": \"{{ $json.address_billing_street }} {{ $json.address_billing_number }} {{ $json.address_billing_zipcode }} {{ $json.address_billing_city }} {{ $json.address_billing_country }}\",\n    \"route\": \"{{ $json.address_billing_street }}\",\n    \"street_number\": \"{{ $json.address_billing_number }}\",\n    \"postal_code\": \"{{ $json.address_billing_zipcode }}\",\n    \"locality\": \"{{ $json.address_billing_city }}\",\n    \"country\": \"{{ $json.address_billing_country }}\"\n  },\n  \"custom_fields\": {\n    \"1a654f5d25fbae0ae82577dfa3448024f852e366\": \"{{ $json.lightspeed_id }}\",\n    \"ae01b1861bc72b55b671a8babd6207316d9c6cd8\": {{ $json.total_orders }},\n    \"0a5166665c7ad7599b2aab130530372954211725\": {{ $json.paid_orders }},\n    \"a785a8901a5c736f7c40b92ca3e982fbf5d13a41\": {{ $json.total_value_incl }},\n    \"e62dba18429c4bb3307916ec46a4793d22f970c2\": {{ $json.lead_score }},\n    \"13096dc68ea12064d2c5e0935722ff0839caff2f\": \"{{ $json.estimated_shipping_volume }}\",\n    \"5df1b60a6200ac568db991d4e1440459a92ff39b\": \"{{ $json.likely_logistics_type }}\",\n    \"7e89f7632587410e9e9ea0db0f225e69939232e6\": \"{{ $json.coc }}\",\n    \"c1b3f8b618dbc2e694b18ba6e1d250b33c143aa8\": \"{{ $json.vat }}\",\n    \"a000a1a83ca6689b763f109e03c5f43eb78e71cf\": {{ $json.lightspeed_id }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2000,
+        1904
+      ],
+      "id": "f252aad4-2abb-4a90-b6a3-04e16578eddd",
+      "name": "Create Organization",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0a7c90c0-83bb-4cc0-9afb-c71190e8c342",
+              "leftValue": "={{ $json }}",
+              "rightValue": "no",
+              "operator": {
+                "type": "object",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        976,
+        448
+      ],
+      "id": "96f14816-c0ff-4a76-a313-f06b84be812c",
+      "name": "If No Match"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v2/persons",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $('Loop Over Items').item.json.customer_name }}\",\n  \"label_ids\": [14],\n  \"org_id\": {{ $json.data.id }},\n  \"emails\": [\n    {\n      \"value\": \"{{ $('Loop Over Items').item.json.email }}\",\n      \"primary\": true,\n      \"label\": \"Work\"\n    }\n  ],\n  \"phones\": [\n    {\n      \"value\": \"{{ $('Loop Over Items').item.json.phone }}\",\n      \"primary\": true,\n      \"label\": \"Phone\"\n    },\n    {\n      \"value\": \"{{ $('Loop Over Items').item.json.mobile }}\",\n      \"label\": \"Mobile\"\n    }\n  ],\n  \"visible_to\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2208,
+        1904
+      ],
+      "id": "9fe8a66a-cad0-4e56-9183-544c09020113",
+      "name": "Create Person",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v2/deals",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"title\": \"New Business Lead – {{ $('Loop Over Items').item.json.org_name }}\",\n  \"owner_id\": {{ $json.data.owner_id }},\n  \"person_id\": {{ $json.data.id }},\n  \"org_id\": {{ $json.data.org_id }},\n  \"pipeline_id\": 1,\n  \"stage_id\": 1,\n  \"value\": 0,\n  \"currency\": \"EUR\",\n  \"visible_to\": 3,\n  \"channel\": 37,\n  \"channel_id\": \"{{ $('Loop Over Items').item.json.lightspeed_id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2416,
+        1904
+      ],
+      "id": "d0167356-a203-4f1c-98fe-8edb3d26deb5",
+      "name": "Create Deal",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.pipedrive.com/api/v1/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{{ $('Loop Over Items').item.json.note }}\",\n  \"deal_id\": {{ $json.data.id }},\n  \"pinned_to_deal_flag\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2608,
+        1904
+      ],
+      "id": "8e4dadbb-1c0a-4649-87c2-0fe131f9d6e5",
+      "name": "Create Note",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "vw66xFyWvDs9zjo7",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl-KVS",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/vw66xFyWvDs9zjo7"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "condition": "ilike",
+              "keyValue": "system_prompt"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        432
+      ],
+      "id": "56f4bb48-f9bd-4b17-a064-8cbf6de7f347",
+      "name": "Get Prompts"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1392,
+        432
+      ],
+      "id": "1c2fc382-6ceb-4150-be82-21486eedfe65",
+      "name": "Aggregate Prompts"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 20
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        1888
+      ],
+      "id": "5c6e6185-e4c1-466c-aec3-4e9b4f21f851",
+      "name": "Schedule Trigger For Pushing Data into PipeDrive"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "vw66xFyWvDs9zjo7",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl-KVS",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/vw66xFyWvDs9zjo7"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "key",
+              "keyValue": "total_limit"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        928,
+        1888
+      ],
+      "id": "7e4de842-9f4c-496d-b6ea-07b14b2877a7",
+      "name": "Get Total Limit Status"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "1DNWnwwruLzPccTp",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/1DNWnwwruLzPccTp"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "keyValue": "queued"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        1888
+      ],
+      "id": "53ea7f6f-d832-4877-b645-b18cb4ad5510",
+      "name": "Get All Data"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "lead_score",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        1888
+      ],
+      "id": "04af1ea0-55b5-4e3e-8394-387da02e0e11",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "maxItems": "={{ $('Get Total Limit Status').item.json.value }}"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        1888
+      ],
+      "id": "da83860d-cda1-460d-bd77-88d44ce519a4",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "1DNWnwwruLzPccTp",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/1DNWnwwruLzPccTp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lightspeed_id",
+              "keyValue": "={{ $json.body.order.customer.resource.id }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        784,
+        448
+      ],
+      "id": "003d0a6e-6fd9-4003-afe2-a22dc4f0a9b2",
+      "name": "Check If Company Exists",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        1888
+      ],
+      "id": "a7bbadd0-d453-4c3b-a2c2-eabb2cf276bc",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "1DNWnwwruLzPccTp",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/1DNWnwwruLzPccTp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lightspeed_id",
+              "keyValue": "={{ $('Loop Over Items').item.json.lightspeed_id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "processed",
+            "org_id": "={{ $('Create Organization').item.json.data.id }}",
+            "deal_id": "={{ $('Create Deal').item.json.data.id }}",
+            "person_id": "={{ $('Create Person').item.json.data.id }}",
+            "note_id": "={{ $json.data.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lightspeed_id",
+              "displayName": "lightspeed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "org_name",
+              "displayName": "org_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "coc",
+              "displayName": "coc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "vat",
+              "displayName": "vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "address_billing_street",
+              "displayName": "address_billing_street",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "address_billing_number",
+              "displayName": "address_billing_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "address_billing_zipcode",
+              "displayName": "address_billing_zipcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "address_billing_city",
+              "displayName": "address_billing_city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "address_billing_country",
+              "displayName": "address_billing_country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "mobile",
+              "displayName": "mobile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "estimated_shipping_volume",
+              "displayName": "estimated_shipping_volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "likely_logistics_type",
+              "displayName": "likely_logistics_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "compact_instruction",
+              "displayName": "compact_instruction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "total_orders",
+              "displayName": "total_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "paid_orders",
+              "displayName": "paid_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "total_value_incl",
+              "displayName": "total_value_incl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "org_id",
+              "displayName": "org_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_id",
+              "displayName": "person_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "note_id",
+              "displayName": "note_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2816,
+        1904
+      ],
+      "id": "0470b53a-b375-48b2-940b-204a95593bec",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "1DNWnwwruLzPccTp",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/1DNWnwwruLzPccTp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lightspeed_id": "={{ $('Webhook').item.json.body.order.customer.resource.id }}",
+            "email": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.email || \"N/A\"}}",
+            "phone": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.phone || \"N/A\" }}",
+            "mobile": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.mobile || \"N/A\" }}",
+            "customer_name": "={{ \n  [\n    $('Webhook').item.json.body.order.customer.resource.embedded.firstname,\n    $('Webhook').item.json.body.order.customer.resource.embedded.middlename,\n    $('Webhook').item.json.body.order.customer.resource.embedded.lastname\n  ].filter(Boolean).join(' ')\n}}",
+            "total_orders": "={{ $json.totalOrders }}",
+            "paid_orders": "={{ $json.paidOrdersCount }}",
+            "total_value_incl": "={{ $json.totalValueIncl }}",
+            "decision": "={{ $('AI Agent').item.json.output.decision.toLowerCase() }}",
+            "reason": "={{ $('AI Agent').item.json.output.reason }}",
+            "estimated_shipping_volume": "={{ $('AI Agent').item.json.output.estimated_shipping_volume.toLowerCase() }}",
+            "likely_logistics_type": "={{ $('AI Agent').item.json.output.likely_logistics_type.toLowerCase() }}",
+            "lead_score": "={{ Number($('AI Agent').item.json.output.score) }}",
+            "compact_instruction": "={{ $('AI Agent').item.json.output.compact_instruction }}",
+            "note": "=<p><strong>AI Qualification Result:</strong></p><ul><li><strong>Decision:</strong> {{ $('AI Agent').item.json.output.decision.toLowerCase() }}</li><li><strong>Lead Score:</strong> {{ $('AI Agent').item.json.output.score }}</li><li><strong>Reason:</strong> {{ $('AI Agent').item.json.output.reason }}</li><li><strong>Estimated Shipping Volume:</strong> {{ $('AI Agent').item.json.output.estimated_shipping_volume.toLowerCase() }}</li><li><strong>Likely Logistics Type:</strong> {{ $('AI Agent').item.json.output.likely_logistics_type.toLowerCase() }}</li><li><strong>Summary:</strong> {{ $('AI Agent').item.json.output.compact_instruction }}</li></ul><p><strong>Order History (Lightspeed):</strong></p><ul><li><strong>Total Orders:</strong> {{ $json.totalOrders }}</li><li><strong>Paid Orders:</strong> {{ $json.paidOrdersCount }}</li><li><strong>Total Value (incl.):</strong> €{{ $json.totalValueIncl }}</li></ul>",
+            "org_name": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyName || \"N/A\"}}",
+            "coc": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyCoCNumber || \"N/A\" }}",
+            "vat": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyVatNumber || \"N/A\" }}",
+            "address_billing_street": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingStreet }}",
+            "address_billing_number": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingNumber }}",
+            "address_billing_zipcode": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingZipcode }}",
+            "address_billing_city": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingCity }}",
+            "address_billing_country": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingCountry.title }}",
+            "status": "queued",
+            "org_id": "N/A",
+            "person_id": "N/A",
+            "deal_id": "N/A",
+            "note_id": "N/A"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lightspeed_id",
+              "displayName": "lightspeed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "org_name",
+              "displayName": "org_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coc",
+              "displayName": "coc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vat",
+              "displayName": "vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_street",
+              "displayName": "address_billing_street",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_number",
+              "displayName": "address_billing_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_zipcode",
+              "displayName": "address_billing_zipcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_city",
+              "displayName": "address_billing_city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_country",
+              "displayName": "address_billing_country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mobile",
+              "displayName": "mobile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estimated_shipping_volume",
+              "displayName": "estimated_shipping_volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "likely_logistics_type",
+              "displayName": "likely_logistics_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "compact_instruction",
+              "displayName": "compact_instruction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_orders",
+              "displayName": "total_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "paid_orders",
+              "displayName": "paid_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_value_incl",
+              "displayName": "total_value_incl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "org_id",
+              "displayName": "org_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_id",
+              "displayName": "person_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "note_id",
+              "displayName": "note_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        416
+      ],
+      "id": "ec52c708-b129-4ad0-8c85-a8f92158584a",
+      "name": "Insert All Data"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "1DNWnwwruLzPccTp",
+          "mode": "list",
+          "cachedResultName": "verpakkingenxl",
+          "cachedResultUrl": "/projects/9rlsqBZGPNj4ARdI/datatables/1DNWnwwruLzPccTp"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "lightspeed_id",
+              "keyValue": "={{ $('Webhook').item.json.body.order.customer.resource.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_score": "={{ Number($('If No Match').item.json.lead_score) }}",
+            "total_orders": "={{ $json.totalOrders }}",
+            "paid_orders": "={{ $json.paidOrdersCount }}",
+            "total_value_incl": "={{ $json.totalValueIncl }}",
+            "lightspeed_id": "={{ $('Webhook').item.json.body.order.customer.resource.id }}",
+            "coc": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyCoCNumber || \"N/A\" }}",
+            "org_name": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyName || \"N/A\"}}",
+            "address_billing_street": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingStreet }}",
+            "vat": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.companyVatNumber || \"N/A\" }}",
+            "address_billing_zipcode": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingZipcode }}",
+            "address_billing_number": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingNumber }}",
+            "address_billing_city": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingCity }}",
+            "address_billing_country": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.addressBillingCountry.title }}",
+            "customer_name": "={{ \n  [\n    $('Webhook').item.json.body.order.customer.resource.embedded.firstname,\n    $('Webhook').item.json.body.order.customer.resource.embedded.middlename,\n    $('Webhook').item.json.body.order.customer.resource.embedded.lastname\n  ].filter(Boolean).join(' ')\n}}",
+            "email": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.email || \"N/A\"}}",
+            "mobile": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.mobile || \"N/A\" }}",
+            "phone": "={{ $('Webhook').item.json.body.order.customer.resource.embedded.phone || \"N/A\" }}",
+            "decision": "={{ $('If No Match').item.json.decision }}",
+            "reason": "={{ $('If No Match').item.json.reason }}",
+            "estimated_shipping_volume": "={{ $('If No Match').item.json.estimated_shipping_volume }}",
+            "likely_logistics_type": "={{ $('If No Match').item.json.likely_logistics_type }}",
+            "compact_instruction": "={{ $('If No Match').item.json.compact_instruction }}",
+            "note": "=<p><strong>AI Qualification Result:</strong></p><ul><li><strong>Decision:</strong> {{ $('If No Match').item.json.decision }}</li><li><strong>Lead Score:</strong> {{ $('If No Match').item.json.lead_score }}</li><li><strong>Reason:</strong> {{ $('If No Match').item.json.reason }}</li><li><strong>Estimated Shipping Volume:</strong> {{ $('If No Match').item.json.estimated_shipping_volume }}</li><li><strong>Likely Logistics Type:</strong> {{ $('If No Match').item.json.likely_logistics_type }}</li><li><strong>Summary:</strong> {{ $('If No Match').item.json.compact_instruction }}</li></ul><p><strong>Order History (Lightspeed):</strong></p><ul><li><strong>Total Orders:</strong> {{ $json.totalOrders }}</li><li><strong>Paid Orders:</strong> {{ $json.paidOrdersCount }}</li><li><strong>Total Value (incl.):</strong> €{{ $json.totalValueIncl }}</li></ul>",
+            "status": "={{ $('If No Match').item.json.status }}",
+            "note_id": "={{ $('If No Match').item.json.note_id }}",
+            "deal_id": "={{ $('If No Match').item.json.deal_id }}",
+            "person_id": "={{ $('If No Match').item.json.person_id }}",
+            "org_id": "={{ $('If No Match').item.json.org_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lightspeed_id",
+              "displayName": "lightspeed_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "org_name",
+              "displayName": "org_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "coc",
+              "displayName": "coc",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "vat",
+              "displayName": "vat",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_street",
+              "displayName": "address_billing_street",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_number",
+              "displayName": "address_billing_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_zipcode",
+              "displayName": "address_billing_zipcode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_city",
+              "displayName": "address_billing_city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "address_billing_country",
+              "displayName": "address_billing_country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_name",
+              "displayName": "customer_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "mobile",
+              "displayName": "mobile",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "decision",
+              "displayName": "decision",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reason",
+              "displayName": "reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estimated_shipping_volume",
+              "displayName": "estimated_shipping_volume",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "likely_logistics_type",
+              "displayName": "likely_logistics_type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "compact_instruction",
+              "displayName": "compact_instruction",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "lead_score",
+              "displayName": "lead_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_orders",
+              "displayName": "total_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "paid_orders",
+              "displayName": "paid_orders",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "total_value_incl",
+              "displayName": "total_value_incl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "org_id",
+              "displayName": "org_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "person_id",
+              "displayName": "person_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "deal_id",
+              "displayName": "deal_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "note_id",
+              "displayName": "note_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1280
+      ],
+      "id": "698c67b3-cfd6-47c3-a83a-1c0badd1e1bd",
+      "name": "Update All Data"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "light_speed_customer_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        2480
+      ],
+      "id": "854078fd-d31e-4e0c-94f6-6250501ce506",
+      "name": "When Executed by Another Workflow",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dfe1fa05-cb10-4b30-8270-fc5103d7d575",
+              "leftValue": "={{ $('If No Match').item.json.status }}",
+              "rightValue": "processed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        1280
+      ],
+      "id": "bcbd9eff-ef07-4634-8995-12945ecca0fb",
+      "name": "If Pushed to Pipedrive"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "43btK6juPJt85ixR",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/43btK6juPJt85ixR",
+          "cachedResultName": "Main"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "light_speed_customer_id": "={{ $('Webhook').item.json.body.order.customer.resource.id }}"
+          },
+          "matchingColumns": [
+            "light_speed_customer_id"
+          ],
+          "schema": [
+            {
+              "id": "light_speed_customer_id",
+              "displayName": "light_speed_customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2144,
+        416
+      ],
+      "id": "2befcdb2-636a-478c-9991-9a301dbbebac",
+      "name": "GET Order Details"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.webshopapp.com/nl/orders.json?customer={{ $json.light_speed_customer_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "250"
+            },
+            {
+              "name": "fields",
+              "value": "priceIncl,paymentStatus"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1024,
+        2480
+      ],
+      "id": "42cb3c45-f97e-49d9-990a-1f74d79fbb69",
+      "name": "Get All Orders by Customer Id",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "W4OhOcXMeLkrZvDy",
+          "name": "Lighspeed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst orders = items[0].json.orders || [];\n\n// Filter only paid orders\nconst paidOrders = orders.filter(o => o.paymentStatus === \"paid\");\n\n// Counts\nconst totalOrders = orders.length;\nconst paidOrdersCount = paidOrders.length;\n\n// Sum of paid orders priceIncl\nlet totalValueIncl = paidOrders.reduce((sum, o) => sum + (o.priceIncl || 0), 0);\n\n// Round to 2 decimal places\ntotalValueIncl = Math.round(totalValueIncl * 100) / 100;\n\nreturn [\n  {\n    json: {\n      totalOrders,\n      paidOrdersCount,\n      totalValueIncl\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        2480
+      ],
+      "id": "e0d2b914-0497-4662-852c-a052a7b70002",
+      "name": "Order Details"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.pipedrive.com/api/v2/organizations/{{ $json.org_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $json.org_name}}\",\n  \"label_ids\": [10],\n  \"visible_to\": 3,\n  \"address\": {\n    \"value\": \"{{ $json.address_billing_street }} {{ $json.address_billing_number }} {{ $json.address_billing_zipcode }} {{ $json.address_billing_city }} {{ $json.address_billing_country }}\",\n    \"route\": \"{{ $json.address_billing_street }}\",\n    \"street_number\": \"{{ $json.address_billing_number }}\",\n    \"postal_code\": \"{{ $json.address_billing_zipcode }}\",\n    \"locality\": \"{{ $json.address_billing_city }}\",\n    \"country\": \"{{ $json.address_billing_country }}\"\n  },\n  \"custom_fields\": {\n    \"1a654f5d25fbae0ae82577dfa3448024f852e366\": \"{{ $json.lightspeed_id }}\",\n    \"ae01b1861bc72b55b671a8babd6207316d9c6cd8\": {{ $json.total_orders }},\n    \"0a5166665c7ad7599b2aab130530372954211725\": {{ $json.paid_orders }},\n    \"a785a8901a5c736f7c40b92ca3e982fbf5d13a41\": {{ $json.total_value_incl }},\n    \"e62dba18429c4bb3307916ec46a4793d22f970c2\": {{ $json.lead_score }},\n    \"13096dc68ea12064d2c5e0935722ff0839caff2f\": \"{{ $json.estimated_shipping_volume }}\",\n    \"5df1b60a6200ac568db991d4e1440459a92ff39b\": \"{{ $json.likely_logistics_type }}\",\n    \"7e89f7632587410e9e9ea0db0f225e69939232e6\": \"{{ $json.coc }}\",\n    \"c1b3f8b618dbc2e694b18ba6e1d250b33c143aa8\": \"{{ $json.vat }}\",\n    \"a000a1a83ca6689b763f109e03c5f43eb78e71cf\": {{ $json.lightspeed_id }}\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1872,
+        1264
+      ],
+      "id": "fd6b9115-c0b7-49f2-9684-b6aef51d647a",
+      "name": "Update Organization",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.pipedrive.com/api/v2/persons/{{ $('If Pushed to Pipedrive').item.json.person_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"{{ $('If Pushed to Pipedrive').item.json.customer_name }}\",\n  \"label_ids\": [14],\n  \"org_id\": {{ $json.data.id }},\n  \"emails\": [\n    {\n      \"value\": \"{{ $('If Pushed to Pipedrive').item.json.email }}\",\n      \"primary\": true,\n      \"label\": \"Work\"\n    }\n  ],\n  \"phones\": [\n    {\n      \"value\": \"{{ $('If Pushed to Pipedrive').item.json.phone }}\",\n      \"primary\": true,\n      \"label\": \"Phone\"\n    },\n    {\n      \"value\": \"{{ $('If Pushed to Pipedrive').item.json.mobile }}\",\n      \"label\": \"Mobile\"\n    }\n  ],\n  \"visible_to\": 3\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2080,
+        1264
+      ],
+      "id": "71b5516d-cc90-4826-8287-614406c9fd59",
+      "name": "Update Person",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://api.pipedrive.com/api/v1/notes/{{ $('If Pushed to Pipedrive').item.json.note_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": \"{{ $('If Pushed to Pipedrive').item.json.note }}\",\n  \"deal_id\": {{ $('If Pushed to Pipedrive').item.json.deal_id }},\n  \"pinned_to_deal_flag\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2288,
+        1264
+      ],
+      "id": "c81bdb7f-67d6-437e-b56d-1cde99558cae",
+      "name": "Update Note",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "qtiJjJFhy3rm81yK",
+          "name": "Pipedrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3024,
+        1904
+      ],
+      "id": "646d99b2-2a0b-4f71-8176-0b71d46d0845",
+      "name": "Wait",
+      "webhookId": "0d5d73de-e5e1-444a-801c-608a745df50c"
+    },
+    {
+      "parameters": {
+        "content": "## Push Leads to Pipedrive",
+        "height": 80,
+        "width": 304,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1760
+      ],
+      "typeVersion": 1,
+      "id": "255d7cbc-c0ce-42a2-ba78-0b1504fd30be",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 📋 Workflow Overview\n**Purpose:** Automated B2B Lead Qualification System\n\n**What it does:**\n- Captures orders from Lightspeed/WebshopApp\n- Uses AI to research and qualify business leads\n- Automatically creates qualified leads in Pipedrive CRM\n- Maintains data sync between platforms\n\n**Key Features:**\n✓ Real-time webhook processing\n✓ AI-powered lead scoring (0-10)\n✓ Batch processing with priority queue\n✓ Duplicate prevention\n✓ Complete order history analysis",
+        "height": 376,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "26cce3d7-3f6f-4f36-b7a5-ac4dc6a0fb86",
+      "name": "Workflow Overview"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Setup Requirements\n\n**Required Credentials:**\n1. **Lightspeed API** (HTTP Basic Auth)\n   - Username: API Key\n   - Password: API Secret\n   - URL: api.webshopapp.com\n\n2. **Pipedrive API** (Query Auth)\n   - Parameter: api_token\n\n3. **Google Gemini API**\n   - PaLM API account\n\n4. **Google Custom Search**\n   - Search Engine ID (cx)\n   - API Key from Google Cloud",
+        "height": 428,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        928
+      ],
+      "typeVersion": 1,
+      "id": "6b357841-13a4-4418-9243-cef960289c6a",
+      "name": "Setup - Credentials"
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Data Tables Required\n\n**Table 1: verpakkingenxl**\nMain lead database with fields:\n- Company info (name, CoC, VAT, address)\n- Contact details (name, email, phone)\n- AI results (decision, score, reason)\n- Order metrics (total, paid, value)\n- Status tracking (queued/processed)\n- Pipedrive IDs (org, person, deal, note)\n\n**Table 2: verpakkingenxl-KVS**\nConfiguration storage:\n- system_prompt_base_agent\n- system_prompt_web_search_agent\n- total_limit (batch size)",
+        "height": 392,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -288,
+        1424
+      ],
+      "typeVersion": 1,
+      "id": "573c7a7a-bef1-4146-92e2-313c809235d9",
+      "name": "Setup - Data Tables"
+    },
+    {
+      "parameters": {
+        "content": "## 🌐 Webhook Entry Point\n\n**Endpoint:** POST /webhook/orders\n**Trigger:** New order created in Lightspeed\n\n**Process Flow:**\n1. Receives order data from Lightspeed\n2. Checks if it's a B2B order (isCompany = true)\n3. Validates for duplicate customers\n4. Routes to AI qualification if new\n\n**Setup Steps:**\n1. Activate this workflow to get webhook URL\n2. Run \"Create Webhook\" node to register\n3. Verify with \"Get All Webhooks\" node\n\n⚠️ **Important:** Webhook must be registered in Lightspeed backend",
+        "height": 412,
+        "width": 400,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        288,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "8e4ebe20-5b40-4373-8872-4ff3eabf5dc0",
+      "name": "Webhook Entry Point"
+    },
+    {
+      "parameters": {
+        "content": "## 🛡️ Duplicate Prevention\n\n**Check Point:** After webhook receives order\n\n**Logic:**\n1. Query data table by Lightspeed customer ID\n2. If match found → Update path\n3. If no match → New lead path\n\n**Benefits:**\n- Prevents duplicate CRM records\n- Maintains data integrity\n- Saves API calls\n- Ensures clean database\n\n**Note:** Uses unique Lightspeed customer ID as primary key, not company name (handles name changes)",
+        "height": 340,
+        "width": 360,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        736,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "ab57db8d-dcfd-416e-8ff9-3d97854a9a23",
+      "name": "Duplicate Prevention"
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 AI Lead Qualification Engine\n\n**Model:** Google Gemini Chat\n**Tools Available:**\n- Gemini Search (web grounding)\n- Custom Google Search\n\n**Qualification Process:**\n1. Receives company data from webhook\n2. Performs web research on business\n3. Analyzes shipping potential\n4. Generates structured output:\n   - Decision: YES/NO\n   - Score: 0-10\n   - Reason: Justification\n   - Shipping Volume: low/medium/high\n   - Logistics Type: parcels/pallets/both\n   - Summary: Business overview\n\n**Quality Gate:** Only leads with score > 5",
+        "height": 480,
+        "width": 440,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1712,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "4c278939-9a1a-41a1-bd03-b5dd71da3fca",
+      "name": "AI Qualification Engine"
+    },
+    {
+      "parameters": {
+        "content": "## 🎓 AI Prompt Engineering\n\n**System Prompts Location:** KVS Data Table\n\n**Base Agent Prompt:**\n- Defines AI personality and role\n- Sets qualification criteria\n- Specifies output format\n- Guides decision logic\n\n**Web Search Agent Prompt:**\n- Instructs search strategy\n- Defines relevant sources\n- Guides data extraction\n- Sets research depth\n\n**Best Practices:**\n1. Be specific about output format\n2. Include examples of good decisions\n3. Define edge cases clearly\n4. Test with various company types\n5. Iterate based on results\n\n**Tip:** Update prompts in KVS table without changing workflow structure",
+        "height": 564,
+        "width": 400,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1200,
+        608
+      ],
+      "typeVersion": 1,
+      "id": "64662a5b-b06e-4d17-b6e5-af6776fdf25d",
+      "name": "AI Prompt Engineering"
+    },
+    {
+      "parameters": {
+        "content": "## 🔄 Update Logic for Existing Customers\n\n**Trigger:** Repeat customer places new order\n\n**Process:**\n1. Detect existing record by Lightspeed ID\n2. Fetch updated order history\n3. Re-run AI qualification (fresh analysis)\n4. Update Pipedrive records:\n   - Organization (metrics refresh)\n   - Person (contact details)\n   - Note (append new qualification)\n\n**Smart Updates:**\n- Preserves existing deal pipeline position\n- Maintains relationship history\n- Adds cumulative insights\n\n✓ Keeps CRM data always current",
+        "height": 476,
+        "width": 400
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        720,
+        1152
+      ],
+      "typeVersion": 1,
+      "id": "44870ead-540b-4477-9d83-f532a11f8838",
+      "name": "Update Logic"
+    },
+    {
+      "parameters": {
+        "content": "## ⏰ Batch Processing Schedule\n\n**Trigger:** Daily at 8:00 PM\n\n**Process:**\n1. Get batch size limit from KVS table\n2. Fetch all \"queued\" leads\n3. Sort by lead_score (descending)\n4. Limit to configured batch size\n5. Loop through and create in Pipedrive\n6. Update status to \"processed\"\n\n**Rate Limiting:**\n- Wait node between iterations\n- Prevents API throttling\n- Ensures stable processing\n\n**Configuration:**\nAdjust `total_limit` in KVS table to change batch size",
+        "height": 380,
+        "width": 400,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        1744
+      ],
+      "typeVersion": 1,
+      "id": "b3c03eee-a4bd-4e76-aed2-995c28c8ce58",
+      "name": "Batch Processing Schedule"
+    },
+    {
+      "parameters": {
+        "content": "## 📦 Order History Analysis\n\n**Sub-Workflow Function:**\nFetches complete order history from Lightspeed\n\n**Data Retrieved:**\n- Total number of orders\n- Count of paid orders\n- Total revenue (€) from paid orders\n\n**Calculations:**\n```\nPaid Orders = orders.filter(status === 'paid')\nTotal Value = sum(paidOrders.priceIncl)\nRounded to 2 decimals\n```\n\n**Purpose:**\n- Enriches lead profile\n- Helps prioritize high-value customers\n- Validates business activity\n- Informs sales strategy",
+        "height": 508,
+        "width": 472,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        2320
+      ],
+      "typeVersion": 1,
+      "id": "8acdc372-c7d6-4b46-b5e3-fb1e61d0fb67",
+      "name": "Order History Analysis"
+    },
+    {
+      "parameters": {
+        "content": "## 🎯 Lead Scoring Logic\n\n**If Score > 5:**\n→ Added to queue\n→ Creates complete lead record\n→ Processed in daily batch\n→ Sorted by score (highest first)\n\n**Decision Criteria:**\n- Business size & potential\n- Shipping volume estimation\n- Industry relevance\n- Company legitimacy\n- Market presence",
+        "height": 340,
+        "width": 360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        48
+      ],
+      "typeVersion": 1,
+      "id": "96c7ec23-cb5e-4a70-97c3-ee5a0b41614b",
+      "name": "Lead Scoring Logic"
+    },
+    {
+      "parameters": {
+        "content": "## 💼 Pipedrive Record Creation\n\n**Creates 4 Records:**\n\n1. **Organization**\n   - Company details\n   - Custom fields: Lightspeed ID, order metrics\n   - Lead score & shipping estimates\n   - CoC & VAT numbers\n\n2. **Person (Contact)**\n   - Linked to organization\n   - Email & phone numbers\n   - Label: B2B Contact\n\n3. **Deal**\n   - Title: \"New Business Lead – [Company]\"\n   - Pipeline Stage 1\n   - Channel: Lightspeed\n\n4. **Note**\n   - AI qualification details\n   - Order history summary\n   - Pinned to deal",
+        "height": 564,
+        "width": 368
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2000,
+        2112
+      ],
+      "typeVersion": 1,
+      "id": "e81b4b20-bb1b-488f-9158-f0a15333e4ae",
+      "name": "Pipedrive Creation"
+    },
+    {
+      "parameters": {
+        "content": "## 📝 Configuration Guide\n\n**Step 1: Pipedrive Custom Fields**\nCreate organization custom fields and note IDs:\n- 1a654f5d... (Lightspeed ID)\n- ae01b186... (Total Orders)\n- 0a516666... (Paid Orders)  \n- a785a890... (Total Value)\n- e62dba18... (Lead Score)\n- 13096dc6... (Shipping Volume)\n- 5df1b60a... (Logistics Type)\n- 7e89f763... (CoC Number)\n- c1b3f8b6... (VAT Number)\n\n**Step 2: Update Node Configuration**\nReplace field IDs in:\n- Create Organization\n- Update Organization\n\n**Step 3: Pipeline Settings**\nSet correct `pipeline_id` and `stage_id` in Deal nodes",
+        "height": 484,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2432,
+        2128
+      ],
+      "typeVersion": 1,
+      "id": "96a802d9-439b-4b28-8cda-e4f2664eb5be",
+      "name": "Configuration Guide"
+    },
+    {
+      "parameters": {
+        "content": "## Research on Business",
+        "height": 80,
+        "width": 352,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        336,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "ac602899-f2dc-434c-b246-97763af1c645",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Order History of Lightspeed Customer",
+        "height": 80,
+        "width": 480,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        2368
+      ],
+      "typeVersion": 1,
+      "id": "6b0728f4-af16-491b-9a02-fb735a772097",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "",
+        "height": 3088,
+        "width": 3760,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -448,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "5a57c558-ea14-40cf-b193-2a381bcb6aef",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## 🔧 Webhook Setup\n\n**Registers Lightspeed webhook for new orders**\n\n1. Add API credentials\n2. Update webhook URL\n3. Execute once\n\nDelete node removes webhooks (update ID)",
+        "height": 264,
+        "width": 300,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "17ea1959-35cd-4f5c-be7a-66b3442d2f04",
+      "name": "Webhook Setup"
+    },
+    {
+      "parameters": {
+        "method": "DELETE",
+        "url": "=https://api.webshopapp.com/nl/webhooks/4714332.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1040,
+        224
+      ],
+      "id": "e3ff9030-01b8-4c2c-bcbd-adcad303519a",
+      "name": "Delete a Webhook",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "W4OhOcXMeLkrZvDy",
+          "name": "Lighspeed"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "43btK6juPJt85ixR",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/43btK6juPJt85ixR",
+          "cachedResultName": "Main"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "light_speed_customer_id": "={{ $json.lightspeed_id }}"
+          },
+          "matchingColumns": [
+            "light_speed_customer_id"
+          ],
+          "schema": [
+            {
+              "id": "light_speed_customer_id",
+              "displayName": "light_speed_customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1232,
+        1280
+      ],
+      "id": "9dcc463e-c617-469a-9631-ca3cff99d1b8",
+      "name": "Call 'Main'"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create Webhook (Basic Auth)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If Company",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Webhook (Basic Auth)": {
+      "main": [
+        [
+          {
+            "node": "Get All Webhooks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "If a Good Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Company": {
+      "main": [
+        [
+          {
+            "node": "Check If Company Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If a Good Lead": {
+      "main": [
+        [
+          {
+            "node": "GET Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Organization": {
+      "main": [
+        [
+          {
+            "node": "Create Person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If No Match": {
+      "main": [
+        [
+          {
+            "node": "Get Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call 'Main'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Person": {
+      "main": [
+        [
+          {
+            "node": "Create Deal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Deal": {
+      "main": [
+        [
+          {
+            "node": "Create Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Note": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Prompts": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Prompts": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger For Pushing Data into PipeDrive": {
+      "main": [
+        [
+          {
+            "node": "Get Total Limit Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Total Limit Status": {
+      "main": [
+        [
+          {
+            "node": "Get All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Data": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check If Company Exists": {
+      "main": [
+        [
+          {
+            "node": "If No Match",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Create Organization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update All Data": {
+      "main": [
+        [
+          {
+            "node": "If Pushed to Pipedrive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get All Orders by Customer Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Pushed to Pipedrive": {
+      "main": [
+        [
+          {
+            "node": "Update Organization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET Order Details": {
+      "main": [
+        [
+          {
+            "node": "Insert All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get All Orders by Customer Id": {
+      "main": [
+        [
+          {
+            "node": "Order Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Organization": {
+      "main": [
+        [
+          {
+            "node": "Update Person",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Person": {
+      "main": [
+        [
+          {
+            "node": "Update Note",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Main'": {
+      "main": [
+        [
+          {
+            "node": "Update All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "76e0ac33b50e0db0072da78a41e059e49f1a758458c2d74dcf85414a2008ed31"
+  }
+}
