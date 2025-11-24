@@ -1891,8 +1891,8 @@
     },
     {
       "parameters": {
-        "content": "## 🔧 Setup Requirements\n\n**Required Credentials:**\n1. **Lightspeed API** (HTTP Basic Auth)\n   - Username: API Key\n   - Password: API Secret\n   - URL: api.webshopapp.com\n\n2. **Pipedrive API** (Query Auth)\n   - Parameter: api_token\n\n3. **Google Gemini API**\n   - PaLM API account\n\n4. **Google Custom Search**\n   - Search Engine ID (cx)\n   - API Key from Google Cloud",
-        "height": 428,
+        "content": "## 🔧 Setup Requirements\n\n**Required Credentials:**\n1. **Lightspeed API** (HTTP Basic Auth)\n   - Username: API Key\n   - Password: API Secret\n   - URL: api.webshopapp.com\n\n2. **Pipedrive API** (Query Auth)\n   - Parameter: api_token\n\n3. **Google Gemini API**\n   - PaLM API account\n",
+        "height": 348,
         "width": 400,
         "color": 5
       },
@@ -1915,7 +1915,7 @@
       "type": "n8n-nodes-base.stickyNote",
       "position": [
         -288,
-        1424
+        1344
       ],
       "typeVersion": 1,
       "id": "573c7a7a-bef1-4146-92e2-313c809235d9",
@@ -1955,7 +1955,7 @@
     },
     {
       "parameters": {
-        "content": "## 🤖 AI Lead Qualification Engine\n\n**Model:** Google Gemini Chat\n**Tools Available:**\n- Gemini Search (web grounding)\n- Custom Google Search\n\n**Qualification Process:**\n1. Receives company data from webhook\n2. Performs web research on business\n3. Analyzes shipping potential\n4. Generates structured output:\n   - Decision: YES/NO\n   - Score: 0-10\n   - Reason: Justification\n   - Shipping Volume: low/medium/high\n   - Logistics Type: parcels/pallets/both\n   - Summary: Business overview\n\n**Quality Gate:** Only leads with score > 5",
+        "content": "## 🤖 AI Lead Qualification Engine\n\n**Model:** Google Gemini Chat\n**Tools Available:**\n- Gemini Search (web grounding)\n\n**Qualification Process:**\n1. Receives company data from webhook\n2. Performs web research on business\n3. Analyzes shipping potential\n4. Generates structured output:\n   - Decision: YES/NO\n   - Score: 0-10\n   - Reason: Justification\n   - Shipping Volume: low/medium/high\n   - Logistics Type: parcels/pallets/both\n   - Summary: Business overview\n\n**Quality Gate:** Only leads with score > 5",
         "height": 480,
         "width": 440,
         "color": 3
