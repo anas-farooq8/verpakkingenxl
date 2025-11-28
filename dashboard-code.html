@@ -75,6 +75,31 @@
             font-size: 18px;
         }
 
+        .reset-filters-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reset-filters-btn:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .reset-filters-btn::before {
+            content: "✕";
+            font-size: 16px;
+        }
+
         .sort-btn {
             background: #ecf0f1;
             border: none;
@@ -283,6 +308,24 @@
             flex-direction: column;
         }
 
+        .filter-item.reset-actions {
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: flex-end;
+            align-self: flex-end;
+            justify-self: flex-end;
+        }
+
+        @media (min-width: 1024px) {
+            .filters-grid {
+                grid-template-columns: repeat(5, minmax(180px, 1fr));
+            }
+
+            .filter-item.reset-actions {
+                grid-column: 5 / 6;
+            }
+        }
+
         .filter-item label {
             font-weight: 600;
             margin-bottom: 8px;
@@ -296,6 +339,86 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+        }
+
+        /* ===========================
+           Searchable Dropdown Styles
+           =========================== */
+        .searchable-dropdown {
+            position: relative;
+        }
+
+        .searchable-dropdown input.dropdown-search {
+            width: 100%;
+            padding: 10px;
+            padding-right: 35px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #333;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23333" d="M6 9L1 4h10z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+
+        .searchable-dropdown input.dropdown-search::placeholder {
+            color: #333;
+            opacity: 1;
+        }
+
+        .searchable-dropdown input.dropdown-search:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .searchable-dropdown .dropdown-options {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            max-height: 250px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .searchable-dropdown .dropdown-options.show {
+            display: block;
+        }
+
+        .searchable-dropdown .dropdown-option {
+            padding: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .searchable-dropdown .dropdown-option:hover {
+            background: #e3f2fd;
+        }
+
+        .searchable-dropdown .dropdown-option.selected {
+            background: #3498db;
+            color: white;
+        }
+
+        .searchable-dropdown .dropdown-option.no-results {
+            color: #999;
+            cursor: default;
+            text-align: center;
+        }
+
+        .searchable-dropdown .dropdown-option.no-results:hover {
+            background: white;
         }
 
         .filter-item select {
@@ -634,21 +757,24 @@
                         </div>
                         <div class="filter-item">
                             <label for="zipcode">Zipcode</label>
-                            <select id="zipcode">
-                                <option value="all">All</option>
-                            </select>
+                            <div class="searchable-dropdown" data-dropdown="zipcode">
+                                <input type="text" class="dropdown-search" id="zipcode" placeholder="All" readonly data-value="all">
+                                <div class="dropdown-options"></div>
+                            </div>
                         </div>
                         <div class="filter-item">
                             <label for="city">City</label>
-                            <select id="city">
-                                <option value="all">All</option>
-                            </select>
+                            <div class="searchable-dropdown" data-dropdown="city">
+                                <input type="text" class="dropdown-search" id="city" placeholder="All" readonly data-value="all">
+                                <div class="dropdown-options"></div>
+                            </div>
                         </div>
                         <div class="filter-item">
                             <label for="country">Country</label>
-                            <select id="country">
-                                <option value="all">All</option>
-                            </select>
+                            <div class="searchable-dropdown" data-dropdown="country">
+                                <input type="text" class="dropdown-search" id="country" placeholder="All" readonly data-value="all">
+                                <div class="dropdown-options"></div>
+                            </div>
                         </div>
                         <div class="filter-item">
                             <label for="shipping_volume">Estimated Shipping Volume</label>
@@ -675,6 +801,9 @@
                                 <span>to</span>
                                 <input type="number" id="score_max" min="0" max="10" step="0.1" value="10" style="width: 80px;">
                             </div>
+                        </div>
+                        <div class="filter-item reset-actions">
+                            <button class="reset-filters-btn" onclick="app.resetFilters()">Reset Filters</button>
                         </div>
                     </div>
                 </div>
@@ -791,7 +920,8 @@
                 currentPage: 1,
                 rowsPerPage: 20,
                 kvsFieldsEdited: false,
-                originalKvsValues: {}
+                originalKvsValues: {},
+                locationData: null
             };
 
             // ========================================
@@ -832,6 +962,7 @@
                     
                     // Only populate filters and render table if we have data
                     if (state.allData.length > 0) {
+                        buildLocationMappings();
                         populateUniqueFilters();
                         applyFiltersAndSort();
                     } else {
@@ -985,32 +1116,272 @@
             // ========================================
             // Filter Management
             // ========================================
-            function populateUniqueFilters() {
-                const extractUniqueValues = (field) => 
-                    [...new Set(state.allData.map(item => item[field]).filter(Boolean))].sort();
+            function buildLocationMappings() {
+                const countries = new Map();
+                const cityTo = new Map();
+                const zipcodeTo = new Map();
 
-                const populateDropdown = (selectId, values) => {
-                    const select = document.getElementById(selectId);
-                    values.forEach(value => {
-                        const option = document.createElement('option');
-                        option.value = value;
-                        option.textContent = value;
-                        select.appendChild(option);
-                    });
+                state.allData.forEach(item => {
+                    const country = (item.address_billing_country || '').trim();
+                    const city = (item.address_billing_city || '').trim();
+                    const zipcode = (item.address_billing_zipcode || '').trim();
+
+                    if (country) {
+                        if (!countries.has(country)) {
+                            countries.set(country, { cities: new Set(), zipcodes: new Set() });
+                        }
+                        if (city) countries.get(country).cities.add(city);
+                        if (zipcode) countries.get(country).zipcodes.add(zipcode);
+                    }
+
+                    if (city) {
+                        if (!cityTo.has(city)) {
+                            cityTo.set(city, { country: country || null, zipcodes: new Set() });
+                        }
+                        if (country && !cityTo.get(city).country) {
+                            cityTo.get(city).country = country;
+                        }
+                        if (zipcode) cityTo.get(city).zipcodes.add(zipcode);
+                    }
+
+                    if (zipcode) {
+                        if (!zipcodeTo.has(zipcode)) {
+                            zipcodeTo.set(zipcode, { city: city || null, country: country || null });
+                        }
+                        const existing = zipcodeTo.get(zipcode);
+                        if (city && !existing.city) existing.city = city;
+                        if (country && !existing.country) existing.country = country;
+                    }
+                });
+
+                state.locationData = {
+                    countries,
+                    cityTo,
+                    zipcodeTo,
+                    allCountries: [...countries.keys()].sort(),
+                    allCities: [...cityTo.keys()].sort(),
+                    allZipcodes: [...zipcodeTo.keys()].sort()
+                };
+            }
+
+            function populateUniqueFilters() {
+                if (!state.locationData) buildLocationMappings();
+                const { allCountries = [], allCities = [], allZipcodes = [] } = state.locationData || {};
+
+                const populateSearchableDropdown = (dropdownId, values) => {
+                    const dropdown = document.querySelector(`[data-dropdown="${dropdownId}"]`);
+                    if (!dropdown) return;
+                    
+                    const optionsContainer = dropdown.querySelector('.dropdown-options');
+                    const input = dropdown.querySelector('.dropdown-search');
+                    
+                    // Store all values for filtering
+                    dropdown.dataset.allValues = JSON.stringify(['all', ...values]);
+                    
+                    // Render all options
+                    renderDropdownOptions(dropdown, ['all', ...values]);
+                    
+                    // Set up search functionality
+                    setupSearchableDropdown(dropdown, input, optionsContainer);
                 };
 
-                populateDropdown('zipcode', extractUniqueValues('address_billing_zipcode'));
-                populateDropdown('city', extractUniqueValues('address_billing_city'));
-                populateDropdown('country', extractUniqueValues('address_billing_country'));
+                populateSearchableDropdown('country', allCountries);
+                populateSearchableDropdown('city', allCities);
+                populateSearchableDropdown('zipcode', allZipcodes);
+            }
+
+            function getDropdown(dropdownId) {
+                return document.querySelector(`[data-dropdown="${dropdownId}"]`);
+            }
+
+            function updateDropdownOptions(dropdownId, values, options = {}) {
+                const dropdown = getDropdown(dropdownId);
+                if (!dropdown) return;
+
+                const keepSelection = options.keepSelection !== false;
+                const normalizedValues = ['all', ...(values || [])];
+                dropdown.dataset.allValues = JSON.stringify(normalizedValues);
+                renderDropdownOptions(dropdown, normalizedValues);
+
+                const input = dropdown.querySelector('.dropdown-search');
+                const currentValue = input.dataset.value || 'all';
+                if (!keepSelection || !normalizedValues.includes(currentValue)) {
+                    selectDropdownOption(dropdown, 'all', { skipCascade: true, skipFilters: true });
+                } else {
+                    input.value = currentValue === 'all' ? 'All' : currentValue;
+                }
+            }
+
+            function setDropdownSelection(dropdownId, value, options = {}) {
+                const dropdown = getDropdown(dropdownId);
+                if (!dropdown) return;
+                const targetValue = value || 'all';
+                const skipCascade = options.skipCascade !== undefined 
+                    ? options.skipCascade 
+                    : !options.triggerCascade;
+                const skipFilters = options.skipFilters !== undefined ? options.skipFilters : true;
+                
+                selectDropdownOption(dropdown, targetValue, { skipCascade, skipFilters });
+            }
+
+            function renderDropdownOptions(dropdown, values, filterText = '') {
+                const optionsContainer = dropdown.querySelector('.dropdown-options');
+                const input = dropdown.querySelector('.dropdown-search');
+                const currentValue = input.dataset.value || 'all';
+                
+                const filtered = filterText 
+                    ? values.filter(v => v.toLowerCase().includes(filterText.toLowerCase()))
+                    : values;
+                
+                if (filtered.length === 0) {
+                    optionsContainer.innerHTML = '<div class="dropdown-option no-results">No results found</div>';
+                    return;
+                }
+                
+                optionsContainer.innerHTML = filtered.map(value => {
+                    const displayText = value === 'all' ? 'All' : value;
+                    const isSelected = value === currentValue ? 'selected' : '';
+                    return `<div class="dropdown-option ${isSelected}" data-value="${value}">${displayText}</div>`;
+                }).join('');
+                
+                // Add click handlers
+                optionsContainer.querySelectorAll('.dropdown-option:not(.no-results)').forEach(option => {
+                    option.addEventListener('click', function() {
+                        selectDropdownOption(dropdown, this.dataset.value);
+                    });
+                });
+            }
+
+            function setupSearchableDropdown(dropdown, input, optionsContainer) {
+                // Show options on click
+                input.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    closeAllDropdowns();
+                    input.readOnly = false;
+                    input.select();
+                    optionsContainer.classList.add('show');
+                    const allValues = JSON.parse(dropdown.dataset.allValues || '[]');
+                    renderDropdownOptions(dropdown, allValues, '');
+                });
+                
+                // Filter on input
+                input.addEventListener('input', function() {
+                    const allValues = JSON.parse(dropdown.dataset.allValues || '[]');
+                    renderDropdownOptions(dropdown, allValues, input.value);
+                });
+                
+                // Prevent closing when clicking inside dropdown
+                optionsContainer.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+
+            function selectDropdownOption(dropdown, value, options = {}) {
+                const { skipCascade = false, skipFilters = false } = options;
+                const input = dropdown.querySelector('.dropdown-search');
+                const optionsContainer = dropdown.querySelector('.dropdown-options');
+                
+                input.dataset.value = value;
+                input.value = value === 'all' ? 'All' : value;
+                input.readOnly = true;
+                optionsContainer.classList.remove('show');
+                
+                if (!skipCascade) {
+                    handleLocationCascade(dropdown.dataset.dropdown, value);
+                }
+                
+                if (!skipFilters) {
+                    applyFiltersAndSort();
+                }
+            }
+
+            function handleLocationCascade(type, value) {
+                if (!state.locationData || !['country', 'city', 'zipcode'].includes(type)) return;
+
+                const { countries, cityTo, zipcodeTo, allCities, allZipcodes } = state.locationData;
+                const toArray = set => set ? Array.from(set).sort() : [];
+                const currentSelections = {
+                    country: document.getElementById('country').dataset.value || 'all',
+                    city: document.getElementById('city').dataset.value || 'all'
+                };
+
+                if (type === 'country') {
+                    if (value === 'all') {
+                        updateDropdownOptions('city', allCities);
+                        updateDropdownOptions('zipcode', allZipcodes);
+                    } else {
+                        const info = countries.get(value);
+                        updateDropdownOptions('city', toArray(info?.cities));
+                        updateDropdownOptions('zipcode', toArray(info?.zipcodes));
+                    }
+                }
+
+                if (type === 'city') {
+                    if (value === 'all') {
+                        if (currentSelections.country !== 'all') {
+                            const countryInfo = countries.get(currentSelections.country);
+                            updateDropdownOptions('zipcode', toArray(countryInfo?.zipcodes));
+                        } else {
+                            updateDropdownOptions('zipcode', allZipcodes);
+                        }
+                    } else {
+                        const info = cityTo.get(value);
+                        updateDropdownOptions('zipcode', toArray(info?.zipcodes));
+                        if (info?.country && currentSelections.country !== info.country) {
+                            setDropdownSelection('country', info.country);
+                        }
+                    }
+                }
+
+                if (type === 'zipcode') {
+                    if (value === 'all') {
+                        if (currentSelections.city !== 'all') {
+                            const cityInfo = cityTo.get(currentSelections.city);
+                            updateDropdownOptions('zipcode', toArray(cityInfo?.zipcodes));
+                        } else if (currentSelections.country !== 'all') {
+                            const countryInfo = countries.get(currentSelections.country);
+                            updateDropdownOptions('zipcode', toArray(countryInfo?.zipcodes));
+                        } else {
+                            updateDropdownOptions('zipcode', allZipcodes);
+                        }
+                    } else {
+                        const info = zipcodeTo.get(value);
+                        if (!info) return;
+
+                        if (info.city) {
+                            setDropdownSelection('city', info.city, { triggerCascade: true });
+                        }
+
+                        const currentCountry = document.getElementById('country').dataset.value || 'all';
+                        if (info.country && currentCountry !== info.country) {
+                            setDropdownSelection('country', info.country, { triggerCascade: true });
+                        } else if (info.country && !info.city) {
+                            // Ensure dropdown options reflect the matched country even if already selected
+                            const countryInfo = countries.get(info.country);
+                            updateDropdownOptions('city', toArray(countryInfo?.cities));
+                            updateDropdownOptions('zipcode', toArray(countryInfo?.zipcodes));
+                        }
+                    }
+                }
+            }
+
+            function closeAllDropdowns() {
+                document.querySelectorAll('.dropdown-options.show').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                    const input = dropdown.parentElement.querySelector('.dropdown-search');
+                    const currentValue = input.dataset.value || 'all';
+                    input.value = currentValue === 'all' ? 'All' : currentValue;
+                    input.readOnly = true;
+                });
             }
 
             function getFilterValues() {
                 return {
                     search: document.getElementById('search').value.toLowerCase(),
                     status: document.getElementById('status').value,
-                    zipcode: document.getElementById('zipcode').value,
-                    city: document.getElementById('city').value,
-                    country: document.getElementById('country').value,
+                    zipcode: document.getElementById('zipcode').dataset.value || 'all',
+                    city: document.getElementById('city').dataset.value || 'all',
+                    country: document.getElementById('country').dataset.value || 'all',
                     shippingVolume: document.getElementById('shipping_volume').value,
                     logisticsType: document.getElementById('logistics_type').value,
                     scoreMin: parseFloat(document.getElementById('score_min').value),
@@ -1377,6 +1748,34 @@
                 location.reload();
             }
 
+            function resetFilters() {
+                // Reset text search
+                document.getElementById('search').value = '';
+                
+                // Reset status dropdown
+                document.getElementById('status').value = 'all';
+                
+                // Reset searchable dropdowns
+                ['country', 'city', 'zipcode'].forEach(id => setDropdownSelection(id, 'all'));
+                if (state.locationData) {
+                    updateDropdownOptions('country', state.locationData.allCountries);
+                    updateDropdownOptions('city', state.locationData.allCities);
+                    updateDropdownOptions('zipcode', state.locationData.allZipcodes);
+                }
+                
+                // Reset shipping volume and logistics type
+                document.getElementById('shipping_volume').value = 'all';
+                document.getElementById('logistics_type').value = 'all';
+                
+                // Reset lead score range
+                document.getElementById('score_min').value = '0';
+                document.getElementById('score_max').value = '10';
+                updateScoreDisplay();
+                
+                // Apply filters to refresh the table
+                applyFiltersAndSort();
+            }
+
             // ========================================
             // Event Listener Setup
             // ========================================
@@ -1384,9 +1783,6 @@
                 const filterElements = [
                     { id: 'search', event: 'input' },
                     { id: 'status', event: 'change' },
-                    { id: 'zipcode', event: 'change' },
-                    { id: 'city', event: 'change' },
-                    { id: 'country', event: 'change' },
                     { id: 'shipping_volume', event: 'change' },
                     { id: 'logistics_type', event: 'change' },
                     { id: 'sort_field', event: 'change' }
@@ -1405,6 +1801,13 @@
                     updateScoreDisplay();
                     applyFiltersAndSort();
                 });
+
+                // Close dropdowns when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.searchable-dropdown')) {
+                        closeAllDropdowns();
+                    }
+                });
             }
 
             // ========================================
@@ -1413,6 +1816,7 @@
             return {
                 // Data operations
                 refreshData,
+                resetFilters,
                 
                 // Table operations
                 toggleSort,
