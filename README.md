@@ -169,6 +169,34 @@ totalValue = round(totalValue, 2)
 - Batch size limits
 - Other configuration parameters
 
+### 6. Error Notification Workflow
+
+**Purpose:** Global error handler that automatically sends email alerts when any workflow fails.
+
+**Trigger:** Error Trigger (catches failures from all workflows)
+
+**Process:**
+1. **Error Trigger** - Detects when any workflow execution fails
+2. **Edit Error Message** - Formats error details into styled HTML email with:
+   - Workflow name that failed
+   - Error message from the failed node
+   - Name of the node that caused the failure
+   - Direct link to the execution details
+3. **Notify User** - Sends email notification via SMTP
+
+**Email Template Features:**
+- Mobile-responsive HTML design
+- Professional styling with clear error highlighting
+- System tag: "verpakkingenxl – Lead Processing System"
+- Monospace formatting for technical details
+- Direct link to view full execution in n8n
+
+**Configuration Required:**
+- SMTP credentials in n8n
+- Update `fromEmail` and `toEmail` in the "Notify User" node
+
+**Note:** This workflow acts as a safety net for the entire system, ensuring you're immediately notified of any issues in the lead processing pipeline.
+
 ### Required Credentials in n8n
 
 Configure these in n8n's credential manager:
@@ -188,6 +216,13 @@ Configure these in n8n's credential manager:
 - **Google Custom Search**
   - Search Engine ID (cx)
   - API Key
+
+- **SMTP Account** (for error notifications)
+  - Host: Your SMTP server
+  - Port: Usually 587 or 465
+  - Username: Your email address
+  - Password: Your email password or app-specific password
+  - Secure: False
 
 ## 🚀 Installation & Setup
 
@@ -259,6 +294,14 @@ Configuration key-value store:
    - Lightspeed API nodes → Select your Lightspeed credential
    - Pipedrive API nodes → Select your Pipedrive credential
    - Google Gemini nodes → Select your Gemini credential
+   - SMTP nodes (in Error Notification workflow) → Select your SMTP credential
+
+3. Configure Error Notification workflow:
+   - Open the "Notify-On-Error" workflow
+   - Update the "Notify User" node:
+     - Set `fromEmail` to your sender email address
+     - Set `toEmail` to the admin/recipient email address
+   - Activate the workflow
 
 ### Step 4: Setup Pipedrive Custom Fields
 
@@ -338,6 +381,11 @@ INSERT INTO verpakkingenxl_kvs (key, value) VALUES
    - Access dashboard URL
    - Verify lead data displays correctly
    - Test KVS configuration updates
+
+5. **Test Error Notifications:**
+   - Manually trigger a workflow failure (e.g., invalid credentials)
+   - Verify you receive an email notification
+   - Check email formatting and execution link
 
 ## ⚙️ Configuration
 
@@ -495,6 +543,19 @@ Access the dashboard at: `https://your-n8n-instance.com/webhook/verpakkingenxl`
 2. Check webhook URL is correct
 3. Review data table connections
 4. Check browser console for JavaScript errors
+
+### Error Notifications Not Sent
+
+**Symptoms:** Workflows fail but no email received
+
+**Solutions:**
+1. Verify Error Notification workflow is activated
+2. Check SMTP credentials are configured correctly
+3. Verify `fromEmail` and `toEmail` are set in "Notify User" node
+4. Check spam/junk folder for notification emails
+5. Test SMTP connection with a simple email node
+6. Review email server logs for delivery issues
+7. Ensure firewall/network allows SMTP connections
 
 ## 🙏 Acknowledgments
 
