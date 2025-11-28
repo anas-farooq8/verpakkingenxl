@@ -59,7 +59,7 @@
             },
             {
               "name": "webhook[address]",
-              "value": "https://your-domain/webhook/orders"
+              "value": "https://your-n8n-domain/webhook/orders"
             }
           ]
         },
@@ -152,7 +152,7 @@
       "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "GHbO6FSOvOQAqB2x",
+          "id": "q36UfbCdnSBc8ZLy",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -394,7 +394,7 @@
         "genericAuthType": "httpQueryAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"content\": \"{{ $('Loop Over Items').item.json.note }}\",\n  \"deal_id\": {{ $json.data.id }},\n  \"pinned_to_deal_flag\": 1\n}",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify($('Loop Over Items').item.json.note) }},\n  \"deal_id\": {{ $json.data.id }},\n  \"pinned_to_deal_flag\": 1\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -2146,7 +2146,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "=https://api.webshopapp.com/nl/webhooks/4714332.json",
+        "url": "=https://api.webshopapp.com/nl/webhooks/4714359.json",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBasicAuth",
         "options": {}
@@ -2154,7 +2154,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1040,
+        832,
         224
       ],
       "id": "e3ff9030-01b8-4c2c-bcbd-adcad303519a",
