@@ -2,6 +2,10 @@
 
 > An intelligent B2B lead qualification system built with n8n that automatically captures, researches, scores, and syncs qualified business leads from Lightspeed to Pipedrive CRM.
 
+![n8n](https://img.shields.io/badge/n8n-Workflow-EA4B71?logo=n8n)
+![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI-4285F4?logo=google)
+![Gmail](https://img.shields.io/badge/Gmail-API-EA4335?logo=gmail)
+
 ## 🎯 Overview
 
 This automation system eliminates manual lead qualification by using AI-powered research to evaluate business customers from your Lightspeed e-commerce platform. It intelligently scores leads (0-10), enriches company data through web research, and automatically synchronizes qualified leads to your Pipedrive CRM.
@@ -558,9 +562,3 @@ Access the dashboard at: `https://your-n8n-instance.com/webhook/verpakkingenxl`
 7. Ensure firewall/network allows SMTP connections
 
 ## 🙏 Acknowledgments
-
-Built with:
-- [n8n](https://n8n.io) - Workflow automation platform
-- [Google Gemini](https://ai.google.dev/) - AI research capabilities
-- [Pipedrive](https://www.pipedrive.com/) - CRM integration
-- [Lightspeed](https://www.lightspeedhq.com/) - E-commerce platform
