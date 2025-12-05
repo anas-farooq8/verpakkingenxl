@@ -59,7 +59,7 @@
             },
             {
               "name": "webhook[address]",
-              "value": "https://your-n8n-domain/webhook/orders"
+              "value": "https://n8n.srv1148868.hstgr.cloud/webhook/orders"
             }
           ]
         },
@@ -293,6 +293,7 @@
       ],
       "id": "f252aad4-2abb-4a90-b6a3-04e16578eddd",
       "name": "Create Organization",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -353,6 +354,7 @@
       ],
       "id": "9fe8a66a-cad0-4e56-9183-544c09020113",
       "name": "Create Person",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -379,6 +381,7 @@
       ],
       "id": "d0167356-a203-4f1c-98fe-8edb3d26deb5",
       "name": "Create Deal",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -405,6 +408,7 @@
       ],
       "id": "8e4dadbb-1c0a-4649-87c2-0fe131f9d6e5",
       "name": "Create Note",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -1745,6 +1749,7 @@
       ],
       "id": "42cb3c45-f97e-49d9-990a-1f74d79fbb69",
       "name": "Get All Orders by Customer Id",
+      "retryOnFail": true,
       "credentials": {
         "httpBasicAuth": {
           "id": "W4OhOcXMeLkrZvDy",
@@ -1784,6 +1789,7 @@
       ],
       "id": "fd6b9115-c0b7-49f2-9684-b6aef51d647a",
       "name": "Update Organization",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -1810,6 +1816,7 @@
       ],
       "id": "71b5516d-cc90-4826-8287-614406c9fd59",
       "name": "Update Person",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -1836,6 +1843,7 @@
       ],
       "id": "c81bdb7f-67d6-437e-b56d-1cde99558cae",
       "name": "Update Note",
+      "retryOnFail": true,
       "credentials": {
         "httpQueryAuth": {
           "id": "qtiJjJFhy3rm81yK",
@@ -2146,7 +2154,7 @@
     {
       "parameters": {
         "method": "DELETE",
-        "url": "=https://api.webshopapp.com/nl/webhooks/4714359.json",
+        "url": "=https://api.webshopapp.com/nl/webhooks/{webhookid}.json",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBasicAuth",
         "options": {}
