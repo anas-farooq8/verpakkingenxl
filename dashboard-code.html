@@ -720,9 +720,190 @@
             white-space: pre-wrap;
             line-height: 1.6;
         }
+
+        /* ===========================
+           Login Screen
+           =========================== */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-overlay.hidden {
+            display: none;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-box h2 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 24px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .login-box p {
+            margin: 0 0 25px 0;
+            color: #666;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .password-input-wrapper input {
+            width: 100%;
+            padding: 12px 45px 12px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .password-input-wrapper input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .password-input-wrapper input.error {
+            border-color: #e74c3c;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #3498db;
+        }
+
+        .toggle-password svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .login-box > button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .login-box > button:hover {
+            background: #2980b9;
+        }
+
+        .login-box > button:active {
+            transform: scale(0.98);
+        }
+
+        .login-error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 15px;
+            padding: 12px;
+            background: #fee;
+            border: 1px solid #e74c3c;
+            border-radius: 6px;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-error.show {
+            display: flex;
+        }
+
+        .login-error svg {
+            flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
+    <!-- Login Screen -->
+    <div class="login-overlay" id="login_overlay">
+        <div class="login-box">
+            <h2>🔒 VerpakkingenXL Lead Dashboard</h2>
+            <p>Enter passcode to access dashboard</p>
+            <div class="password-input-wrapper">
+                <input type="password" id="login_password" placeholder="Enter passcode" autocomplete="off">
+                <button type="button" class="toggle-password" onclick="auth.togglePassword()" aria-label="Toggle password visibility">
+                    <svg id="eye_icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            </div>
+            <button type="button" onclick="auth.login()">Access Dashboard</button>
+            <div class="login-error" id="login_error">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <span>Invalid passcode. Please try again.</span>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -906,6 +1087,142 @@
 
     <script>
         // ============================================
+        // Authentication Module
+        // ============================================
+        const auth = (() => {
+            const PASSWORD_HASH = '7f97f29af8b5c9b9af787b8dec539cde58bd6fd75c6494586f34570747425424';
+            let sessionToken = null;
+
+            // Generate a random 256-bit session token
+            function generateSessionToken() {
+                const array = new Uint8Array(32); // 256 bits
+                crypto.getRandomValues(array);
+                return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+            }
+
+            // Hash password with SHA-256
+            async function hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            // Check if currently logged in
+            function isLoggedIn() {
+                // Check if hash matches our current session token
+                if (sessionToken && window.location.hash === `#${sessionToken}`) {
+                    return true;
+                }
+                return false;
+            }
+
+            // Log out user
+            function logout() {
+                sessionToken = null;
+                window.location.hash = '';
+            }
+
+            // Initialize session token from URL hash on page load
+            function initSession() {
+                const hash = window.location.hash.substring(1);
+                if (hash && hash.length === 64) { // Valid 256-bit hex token
+                    sessionToken = hash;
+                }
+            }
+
+            function togglePassword() {
+                const passwordInput = document.getElementById('login_password');
+                const eyeIcon = document.getElementById('eye_icon');
+                
+                if (!passwordInput || !eyeIcon) return;
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.setAttribute('fill', 'none');
+                    eyeIcon.setAttribute('stroke', 'currentColor');
+                    eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.setAttribute('fill', 'none');
+                    eyeIcon.setAttribute('stroke', 'currentColor');
+                    eyeIcon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+                }
+            }
+
+            async function login() {
+                const passwordInput = document.getElementById('login_password');
+                const errorMsg = document.getElementById('login_error');
+                
+                if (!passwordInput || !errorMsg) return;
+                
+                const password = passwordInput.value;
+
+                errorMsg.classList.remove('show');
+                passwordInput.classList.remove('error');
+
+                if (!password) {
+                    errorMsg.querySelector('span').textContent = 'Please enter a passcode.';
+                    errorMsg.classList.add('show');
+                    passwordInput.classList.add('error');
+                    passwordInput.focus();
+                    return;
+                }
+
+                const hash = await hashPassword(password);
+                
+                if (hash === PASSWORD_HASH) {
+                    // Generate new random session token
+                    sessionToken = generateSessionToken();
+                    window.location.hash = sessionToken;
+                    
+                    document.getElementById('login_overlay').classList.add('hidden');
+                    errorMsg.classList.remove('show');
+                    app.init();
+                } else {
+                    errorMsg.querySelector('span').textContent = 'Invalid passcode. Please try again.';
+                    errorMsg.classList.add('show');
+                    passwordInput.classList.add('error');
+                    passwordInput.value = '';
+                    passwordInput.focus();
+                }
+            }
+
+            function checkAuth() {
+                initSession(); // Load session token from URL hash
+                
+                if (isLoggedIn()) {
+                    document.getElementById('login_overlay').classList.add('hidden');
+                    return true;
+                }
+                return false;
+            }
+
+            // Allow Enter key to submit
+            document.addEventListener('DOMContentLoaded', () => {
+                const passwordInput = document.getElementById('login_password');
+                if (passwordInput) {
+                    passwordInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') login();
+                    });
+                    passwordInput.focus();
+                }
+            });
+
+            return { 
+                login, 
+                checkAuth, 
+                togglePassword,
+                isLoggedIn,
+                logout
+            };
+        })();
+        
+        // Make auth globally accessible for inline onclick handlers
+        window.auth = auth;
+
+        // ============================================
         // VerpakkingenXL Dashboard Application
         // ============================================
         const app = (() => {
@@ -946,6 +1263,11 @@
             // ========================================
             // Data Initialization
             // ========================================
+            function init() {
+                setupEventListeners();
+                initializeData();
+            }
+
             function initializeData() {
                 try {
                     // Check if the data exists and is valid
@@ -1814,36 +2136,31 @@
             // Public API
             // ========================================
             return {
-                // Data operations
+                init,
                 refreshData,
                 resetFilters,
-                
-                // Table operations
                 toggleSort,
                 goToPage,
-                
-                // Modal operations
                 openModal,
                 closeModal,
                 closeModalOnOverlay,
                 openDealLink,
-                
-                // Tab operations
                 switchTab,
-                
-                // KVS operations
-                saveKVS,
-                
-                // Initialize
-                init: () => {
-                    setupEventListeners();
-                    initializeData();
-                }
+                saveKVS
             };
         })();
+        
+        // Make app globally accessible for inline onclick handlers
+        window.app = app;
 
-        // Initialize application
-        app.init();
+        // ========================================
+        // Initialize Application with Auth Check
+        // ========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            if (auth.checkAuth()) {
+                app.init();
+            }
+        });
     </script>
 </body>
 </html>
