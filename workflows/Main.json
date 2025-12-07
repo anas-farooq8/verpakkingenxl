@@ -59,7 +59,7 @@
             },
             {
               "name": "webhook[address]",
-              "value": "https://n8n.srv1148868.hstgr.cloud/webhook/orders"
+              "value": "https://your-n8n-domain/webhook/orders"
             }
           ]
         },
